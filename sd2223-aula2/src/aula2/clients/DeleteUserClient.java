@@ -8,7 +8,6 @@ import aula2.api.User;
 import aula2.api.service.RestUsers;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -27,8 +26,6 @@ public class DeleteUserClient {
 		String userId = args[1];
 		String password = args[2];
 
-		var u = getUser(userId, password);
-
 		System.out.println("Sending request to server.");
 
 		ClientConfig config = new ClientConfig();
@@ -38,7 +35,7 @@ public class DeleteUserClient {
 
 		Response r = target.path(userId)
 				.queryParam(RestUsers.PASSWORD, password).request()
-				.accept(MediaType.APPLICATION_JSON).delete(Entity.entity(u, MediaType.APPLICATION_JSON));
+				.accept(MediaType.APPLICATION_JSON).delete();
 
 		if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
 			System.out.println("Success:");
