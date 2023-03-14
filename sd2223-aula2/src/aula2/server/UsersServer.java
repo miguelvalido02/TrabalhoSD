@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
-
+import aula2.server.Discovery;
 import aula2.server.resources.UsersResource;
 
 public class UsersServer {
@@ -35,6 +35,8 @@ public class UsersServer {
 			Log.info(String.format("%s Server ready @ %s\n", SERVICE, serverURI));
 
 			// More code can be executed here...
+			Discovery d = Discovery.getInstance();
+			d.announce(SERVICE, serverURI);
 		} catch (Exception e) {
 			Log.severe(e.getMessage());
 		}

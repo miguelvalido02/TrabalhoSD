@@ -7,7 +7,7 @@
 	<version>1.0</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<authors>xxxxx-yyyyy</authors>
+		<authors>59744-60477</authors>
 	</properties>
 	<build>
 		<sourceDirectory>src</sourceDirectory>
@@ -66,6 +66,11 @@
 			<groupId>org.glassfish.jaxb</groupId>
 			<artifactId>jaxb-runtime</artifactId>
 			<version>4.0.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>31.1-jre</version>
 		</dependency>
 	</dependencies>
 </project>
