@@ -1,0 +1,10 @@
+aula2/clients/SearchUserClient$1.class
+aula2/clients/SearchUserClient.class
+aula2/server/UsersServer.class
+aula2/api/service/RestUsers.class
+aula2/clients/DeleteUserClient.class
+aula2/api/User.class
+aula2/server/resources/UsersResource.class
+aula2/clients/UpdateUserClient.class
+aula2/clients/GetUserClient.class
+aula2/clients/CreateUserClient.class
