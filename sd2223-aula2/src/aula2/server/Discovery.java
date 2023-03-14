@@ -63,7 +63,6 @@ class DiscoveryImpl implements Discovery {
 
 	private static Logger Log = Logger.getLogger(Discovery.class.getName());
 	private Map<String, Cache<String, URI>> urisMap;
-
 	// The pre-aggreed multicast endpoint assigned to perform discovery.
 
 	static final int DISCOVERY_RETRY_TIMEOUT = 5000;
