@@ -6,6 +6,7 @@ import org.glassfish.jersey.client.ClientConfig;
 
 import aula2.api.User;
 import aula2.api.service.RestUsers;
+import aula2.server.Discovery;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
@@ -16,10 +17,11 @@ import jakarta.ws.rs.core.Response.Status;
 
 public class UpdateUserClient {
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 
 		if (args.length != 6) {
-			System.err.println("Use: java aula2.clients.UpdateUserClient url userId oldpwd fullName email password");
+			System.err.println(
+					"Use: java aula2.clients.UpdateUserClient serviceName userId oldpwd fullName email password");
 			return;
 		}
 
@@ -34,10 +36,12 @@ public class UpdateUserClient {
 
 		System.out.println("Sending request to server.");
 
+		String serviceName = Discovery.getInstance().knownUrisOf(serverUrl, 1)[0].toString();
+
 		ClientConfig config = new ClientConfig();
 		Client client = ClientBuilder.newClient(config);
 
-		WebTarget target = client.target(serverUrl).path(RestUsers.PATH);
+		WebTarget target = client.target(serviceName).path(RestUsers.PATH);
 
 		Response r = target.path(userId)
 				.queryParam(RestUsers.PASSWORD, oldpwd).request()

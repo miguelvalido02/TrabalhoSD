@@ -6,6 +6,7 @@ import org.glassfish.jersey.client.ClientConfig;
 
 import aula2.api.User;
 import aula2.api.service.RestUsers;
+import aula2.server.Discovery;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.WebTarget;
@@ -15,7 +16,7 @@ import jakarta.ws.rs.core.Response.Status;
 
 public class DeleteUserClient {
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 
 		if (args.length != 3) {
 			System.err.println("Use: java aula2.clients.DeleteUserClient url userId password");
@@ -28,10 +29,12 @@ public class DeleteUserClient {
 
 		System.out.println("Sending request to server.");
 
+		String servUrl = Discovery.getInstance().knownUrisOf(serverUrl, 1)[0].toString();
+
 		ClientConfig config = new ClientConfig();
 		Client client = ClientBuilder.newClient(config);
 
-		WebTarget target = client.target(serverUrl).path(RestUsers.PATH);
+		WebTarget target = client.target(servUrl).path(RestUsers.PATH);
 
 		Response r = target.path(userId)
 				.queryParam(RestUsers.PASSWORD, password).request()
