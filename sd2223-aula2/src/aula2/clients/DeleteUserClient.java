@@ -19,7 +19,7 @@ public class DeleteUserClient {
 	public static void main(String[] args) throws IOException, InterruptedException {
 
 		if (args.length != 3) {
-			System.err.println("Use: java aula2.clients.DeleteUserClient url userId password");
+			System.err.println("Use: java aula2.clients.DeleteUserClient serviceName userId password");
 			return;
 		}
 
@@ -29,12 +29,12 @@ public class DeleteUserClient {
 
 		System.out.println("Sending request to server.");
 
-		String servUrl = Discovery.getInstance().knownUrisOf(serverUrl, 1)[0].toString();
+		String serviceName = Discovery.getInstance().knownUrisOf(serverUrl, 1)[0].toString();
 
 		ClientConfig config = new ClientConfig();
 		Client client = ClientBuilder.newClient(config);
 
-		WebTarget target = client.target(servUrl).path(RestUsers.PATH);
+		WebTarget target = client.target(serviceName).path(RestUsers.PATH);
 
 		Response r = target.path(userId)
 				.queryParam(RestUsers.PASSWORD, password).request()
