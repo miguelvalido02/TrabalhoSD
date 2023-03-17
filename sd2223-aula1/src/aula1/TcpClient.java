@@ -18,10 +18,10 @@ public class TcpClient {
 		var hostname = "";
 		Discovery d = Discovery.getInstance();
 		URI[] uris = d.knownUrisOf("serviceName", 1);
-		// serviceName /t tcp://localhost:9000
-		String uriString = uris[0].toString().split("//")[1]; // localhost:9000
-		port = Integer.parseInt(uriString.split(":")[1]); // 9000
-		hostname = uriString.split(":")[0]; // localhost
+		// <nome-do-domínio>:<serviço><tab><uri-do-servidor>
+		String[] decodedUri = decodeUri(uris[0].toString());
+		// port = Integer.parseInt(uriString.split(":")[1]); // 9000
+		// hostname = uriString.split(":")[0]; // localhost
 
 		try (var cs = new Socket(hostname, port); var sc = new Scanner(System.in)) {
 			String input;
@@ -31,5 +31,14 @@ public class TcpClient {
 			} while (!input.equals(QUIT));
 
 		}
+	}
+
+	private static String[] decodeUri(String uriString) {
+		String[] messageInfo = uriString.split(":");
+		String domain = messageInfo[0];
+		String[] messageInfo2 = messageInfo[1].split("\t");
+		String service = messageInfo2[0];
+		String uri = messageInfo2[1];
+		return new String[] { domain, service, uri };
 	}
 }
