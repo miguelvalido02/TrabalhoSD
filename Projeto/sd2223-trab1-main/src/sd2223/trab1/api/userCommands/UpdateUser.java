@@ -21,18 +21,18 @@ public class UpdateUser {
 
 		if (args.length != 6) {
 			System.err.println(
-					"Use: java trab1.api.userCommands.UpdateUserClient serviceName userId oldpwd fullName email password");
+					"Use: java trab1.api.userCommands.UpdateUserClient serviceName name oldpwd pwd domain displayName");
 			return;
 		}
 
 		String serverUrl = args[0];
-		String userId = args[1];
+		String name = args[1];
 		String oldpwd = args[2];
-		String fullName = args[3];
-		String email = args[4];
-		String password = args[5];
+		String pwd = args[3];
+		String displayName = args[5];
+		String domain = args[4];
 
-		var u = new User(userId, fullName, email, password);
+		var u = new User(name, pwd, domain, displayName);
 
 		System.out.println("Sending request to server.");
 
@@ -43,7 +43,7 @@ public class UpdateUser {
 
 		WebTarget target = client.target(serviceName).path(UsersService.PATH);
 
-		Response r = target.path(userId)
+		Response r = target.path(name)
 				.queryParam(UsersService.PWD, oldpwd).request()
 				.accept(MediaType.APPLICATION_JSON)
 				.put(Entity.entity(u, MediaType.APPLICATION_JSON));

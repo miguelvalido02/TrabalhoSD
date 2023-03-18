@@ -21,66 +21,73 @@ public interface UsersService {
 	String NAME = "name";
 	String QUERY = "query";
 	String PATH = "/users";
-	
+
 	/**
 	 * Creates a new user in the local domain.
+	 * 
 	 * @param user User to be created
-	 * @return 200 the address of the user (name@domain). 
-	 * 		409 if the userId already exists. 
-	 * 		400 otherwise.
+	 * @return 200 the address of the user (name@domain).
+	 *         409 if the userId already exists.
+	 *         400 otherwise.
 	 */
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	String createUser(User user);
-	
+
 	/**
 	 * Obtains the information on the user identified by name
+	 * 
 	 * @param name the name of the user
-	 * @param pwd password of the user
-	 * @return 200 and the user object, if the userId exists and password matches the
-	 *         existing password; 
-	 *         403 if the password is incorrect; 
+	 * @param pwd  password of the user
+	 * @return 200 and the user object, if the userId exists and password matches
+	 *         the
+	 *         existing password;
+	 *         403 if the password is incorrect;
 	 *         404 if no user exists with the provided userId
 	 */
 	@GET
-	@Path("/{" + NAME+ "}")
+	@Path("/{" + NAME + "}")
 	@Produces(MediaType.APPLICATION_JSON)
-	User getUser(@PathParam(NAME) String name, @QueryParam( PWD ) String pwd);
-	
+	User getUser(@PathParam(NAME) String name, @QueryParam(PWD) String pwd);
+
 	/**
-	 * Modifies the information of a user. Values of null in any field of the user will be 
-	 * considered as if the the fields is not to be modified (the name cannot be modified).
+	 * Modifies the information of a user. Values of null in any field of the user
+	 * will be
+	 * considered as if the the fields is not to be modified (the name cannot be
+	 * modified).
+	 * 
 	 * @param name the name of the user
-	 * @param pwd password of the user
+	 * @param pwd  password of the user
 	 * @param user Updated information
 	 * @return 200 the updated user object, if the name exists and password matches
-	 *         the existing password 
-	 *         403 if the password is incorrect 
-	 *         404 if no user exists with the provided userId 
+	 *         the existing password
+	 *         403 if the password is incorrect
+	 *         404 if no user exists with the provided userId
 	 *         400 otherwise.
 	 */
 	@PUT
-	@Path("/{" + NAME+ "}")
+	@Path("/{" + NAME + "}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	User updateUser(@PathParam( NAME ) String name, @QueryParam( PWD ) String pwd, User user);
-	
+	User updateUser(@PathParam(NAME) String name, @QueryParam(PWD) String pwd, User user);
+
 	/**
 	 * Deletes the user identified by name
+	 * 
 	 * @param name the name of the user
-	 * @param pwd password of the user
+	 * @param pwd  password of the user
 	 * @return 200 the deleted user object, if the name exists and pwd matches the
-	 *         existing password 
-	 *         403 if the password is incorrect 
+	 *         existing password
+	 *         403 if the password is incorrect
 	 *         404 if no user exists with the provided userId
 	 *         409 otherwise
 	 */
 	@DELETE
-	@Path("/{" + NAME+ "}")
+	@Path("/{" + NAME + "}")
 	@Produces(MediaType.APPLICATION_JSON)
 	User deleteUser(@PathParam(NAME) String name, @QueryParam(PWD) String pwd);
-	
+
 	/**
 	 * Returns the list of users for which the pattern is a substring of the name
 	 * (of the user), case-insensitive. The password of the users returned by the

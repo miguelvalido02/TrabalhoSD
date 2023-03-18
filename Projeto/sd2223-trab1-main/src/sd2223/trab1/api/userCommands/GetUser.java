@@ -19,13 +19,13 @@ public class GetUser {
 	public static void main(String[] args) throws IOException, InterruptedException {
 
 		if (args.length != 3) {
-			System.err.println("Use: java trab1.api.userCommands.GetUser serviceName userId password");
+			System.err.println("Use: java trab1.api.userCommands.GetUser serviceName name pwd");
 			return;
 		}
 
 		String serverUrl = args[0];
-		String userId = args[1];
-		String password = args[2];
+		String name = args[1];
+		String pwd = args[2];
 
 		System.out.println("Sending request to server.");
 
@@ -36,8 +36,8 @@ public class GetUser {
 
 		WebTarget target = client.target(serviceName).path(UsersService.PATH);
 
-		Response r = target.path(userId)
-				.queryParam(UsersService.PWD, password).request()
+		Response r = target.path(name)
+				.queryParam(UsersService.PWD, pwd).request()
 				.accept(MediaType.APPLICATION_JSON)
 				.get();
 

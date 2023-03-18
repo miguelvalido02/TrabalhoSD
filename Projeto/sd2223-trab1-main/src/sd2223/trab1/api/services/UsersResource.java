@@ -33,25 +33,25 @@ public class UsersResource implements UsersService {
 			throw new WebApplicationException(Status.BAD_REQUEST);
 		}
 
-		// Insert new user, checking if userId already exists
-		if (users.putIfAbsent(user.getDisplayName(), user) != null) {
+		// Insert new user, checking if name already exists
+		if (users.putIfAbsent(user.getName(), user) != null) {
 			Log.info("User already exists.");
 			throw new WebApplicationException(Status.CONFLICT);
 		}
-		return user.getDisplayName();
+		return user.getName();
 	}
 
 	@Override
-	public User getUser(String userId, String password) {
-		Log.info("getUser : user = " + userId + "; pwd = " + password);
+	public User getUser(String name, String pwd) {
+		Log.info("getUser : user = " + name + "; pwd = " + pwd);
 
 		// Check if user is valid
-		if (userId == null || password == null) {
-			Log.info("UserId or password null.");
+		if (name == null || pwd == null) {
+			Log.info("name or pwd null.");
 			throw new WebApplicationException(Status.BAD_REQUEST);
 		}
 
-		var user = users.get(userId);
+		var user = users.get(name);
 
 		// Check if user exists
 		if (user == null) {
@@ -59,9 +59,9 @@ public class UsersResource implements UsersService {
 			throw new WebApplicationException(Status.NOT_FOUND);
 		}
 
-		// Check if the password is correct
-		if (!user.getPwd().equals(password)) {
-			Log.info("Password is incorrect.");
+		// Check if the pwd is correct
+		if (!user.getPwd().equals(pwd)) {
+			Log.info("pwd is incorrect.");
 			throw new WebApplicationException(Status.FORBIDDEN);
 		}
 
@@ -69,30 +69,34 @@ public class UsersResource implements UsersService {
 	}
 
 	@Override
-	public User updateUser(String userId, String password, User user) {
-		Log.info("updateUser : user = " + userId + "; pwd = " + password + " ; user = " + user);
-		// TODO Complete method
-		if (getUser(userId, password) != null)
-			users.remove(userId);
-		return users.put(user.getDisplayName(), user);
+	public User updateUser(String name, String oldPwd, User user) {
+		Log.info("updateUser : name = " + name + "; pwd = " + oldPwd + " ; user = " + user);
+		var u = getUser(name, oldPwd);
+		User updatedUser = null;
+		if (u != null) {
+			String pwd = user.getPwd() == null ? oldPwd : user.getPwd();
+			String domain = user.getDomain() == null ? u.getDomain() : user.getDomain();
+			String displayName = user.getDisplayName() == null ? u.getDisplayName() : user.getDisplayName();
+			updatedUser = new User(name, pwd, domain, displayName);
+			users.put(name, updatedUser);
+		}
+		return updatedUser;
 	}
 
 	@Override
-	public User deleteUser(String userId, String password) {
-		Log.info("deleteUser : user = " + userId + "; pwd = " + password);
-		// TODO Complete method
-		getUser(userId, password);
-		return users.remove(userId);
+	public User deleteUser(String name, String pwd) {
+		Log.info("deleteUser : user = " + name + "; pwd = " + pwd);
+		getUser(name, pwd);
+		return users.remove(name);
 	}
 
 	@Override
 	public List<User> searchUsers(String pattern) {
 		Log.info("searchUsers : pattern = " + pattern);
-		// TODO Complete method
 		List<User> l = new ArrayList<User>();
 		for (User user : users.values()) {
 			if (user.getName().contains(pattern))
-				l.add(new User(user.getDisplayName(), user.getName(), user.getDomain(), ""));
+				l.add(new User(user.getName(), "", user.getDomain(), user.getDisplayName()));
 		}
 		return l;
 	}

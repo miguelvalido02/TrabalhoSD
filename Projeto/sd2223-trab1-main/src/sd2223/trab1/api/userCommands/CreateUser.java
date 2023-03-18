@@ -21,17 +21,17 @@ public class CreateUser {
 
 		if (args.length != 5) {
 			System.err
-					.println("Use: java trab1.api.userCommands.CreateUser serviceName userId fullName email password");
+					.println("Use: java trab1.api.userCommands.CreateUser serviceName name pwd domain displayName");
 			return;
 		}
 
-		String serverUrl = args[0];
-		String userId = args[1];
-		String fullName = args[2];
-		String email = args[3];
-		String password = args[4];
+		String serverUrl = args[0]; // O que entra aqui?
+		String name = args[1];
+		String pwd = args[2];
+		String domain = args[3];
+		String displayName = args[4];
 
-		var u = new User(userId, fullName, email, password);
+		var u = new User(name, pwd, domain, displayName);
 
 		System.out.println("Sending request to server.");
 
