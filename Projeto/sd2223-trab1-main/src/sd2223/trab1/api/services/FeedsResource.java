@@ -3,6 +3,7 @@ package sd2223.trab1.api.services;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.User;
@@ -31,6 +32,8 @@ public class FeedsResource implements FeedsService {
 
     @Override
     public long postMessage(String user, String pwd, Message msg) {
+        UUID id = UUID.randomUUID();
+        long lid = id.getMostSignificantBits();
         throw new UnsupportedOperationException("Unimplemented method 'postMessage'");
     }
 

@@ -21,7 +21,7 @@ public class SearchUser {
 	public static void main(String[] args) throws IOException, InterruptedException {
 
 		if (args.length != 2) {
-			System.err.println("Use: java trab1.api.userCommands.SearchUserClient serviceName query");
+			System.err.println("Use: java trab1.api.userCommands.SearchUser serviceName query");
 			return;
 		}
 

@@ -38,7 +38,7 @@ public class UsersResource implements UsersService {
 			Log.info("User already exists.");
 			throw new WebApplicationException(Status.CONFLICT);
 		}
-		return user.getName();
+		return user.getName() + "@" + user.getDomain();
 	}
 
 	@Override

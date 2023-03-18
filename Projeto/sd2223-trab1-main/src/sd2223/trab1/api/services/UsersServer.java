@@ -17,11 +17,17 @@ public class UsersServer {
 	}
 
 	public static final int PORT = 8080;
-	public static final String SERVICE = "UsersService";
+	public static final String SERVICE = "users";
 	private static final String SERVER_URI_FMT = "http://%s:%s/rest";
 
 	public static void main(String[] args) {
 		try {
+			if (args.length != 1) {
+				System.err.println("Use: java trab1.api.services.UsersServer domain");
+				return;
+			}
+
+			String domain = args[0];
 
 			ResourceConfig config = new ResourceConfig();
 			config.register(UsersResource.class);
@@ -34,7 +40,7 @@ public class UsersServer {
 
 			// More code can be executed here...
 			Discovery d = Discovery.getInstance();
-			d.announce(SERVICE, serverURI);
+			d.announce(domain + ":" + SERVICE, serverURI);
 
 		} catch (Exception e) {
 			Log.severe(e.getMessage());
