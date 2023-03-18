@@ -30,22 +30,22 @@ public interface Discovery {
 	/**
 	 * Used to announce the URI of the given service name.
 	 * 
-	 * @param domain_serviceName - the name of the service
-	 * @param serviceURI         - the uri of the service
+	 * @param serviceName - the name of the service
+	 * @param serviceURI  - the uri of the service
 	 */
-	public void announce(String domain_serviceName, String serviceURI);
+	public void announce(String serviceName, String serviceURI);
 
 	/**
 	 * Get discovered URIs for a given service name
 	 * 
-	 * @param domain_serviceName - name of the service
-	 * @param minReplies         - minimum number of requested URIs. Blocks until
-	 *                           the
-	 *                           number is satisfied.
+	 * @param serviceName - name of the service
+	 * @param minReplies  - minimum number of requested URIs. Blocks until
+	 *                    the
+	 *                    number is satisfied.
 	 * @return array with the discovered URIs for the given service name.
 	 * @throws InterruptedException
 	 */
-	public URI[] knownUrisOf(String domain_serviceName, int minReplies) throws InterruptedException;
+	public URI[] knownUrisOf(String serviceName, int minReplies) throws InterruptedException;
 
 	/**
 	 * Get the instance of the Discovery service
@@ -93,12 +93,12 @@ class DiscoveryImpl implements Discovery {
 	}
 
 	@Override
-	public void announce(String domain_serviceName, String serviceURI) {
+	public void announce(String serviceName, String serviceURI) {
 		Log.info(String.format("Starting Discovery announcements on: %s for: %s -> %s\n", DISCOVERY_ADDR,
-				domain_serviceName,
+				serviceName,
 				serviceURI));
 
-		var pktBytes = String.format("%s%s%s", domain_serviceName, DELIMITER, serviceURI).getBytes();
+		var pktBytes = String.format("%s%s%s", serviceName, DELIMITER, serviceURI).getBytes();
 		var pkt = new DatagramPacket(pktBytes, pktBytes.length, DISCOVERY_ADDR);
 
 		// start thread to send periodic announcements
@@ -119,11 +119,11 @@ class DiscoveryImpl implements Discovery {
 	}
 
 	@Override
-	public URI[] knownUrisOf(String domain_serviceName, int minEntries) throws InterruptedException {
-		Cache<String, URI> cache = urisMap.get(domain_serviceName);
+	public URI[] knownUrisOf(String serviceName, int minEntries) throws InterruptedException {
+		Cache<String, URI> cache = urisMap.get(serviceName);
 		while (cache == null || cache.size() < minEntries) {
 			Thread.sleep(DISCOVERY_ANNOUNCE_PERIOD);
-			cache = urisMap.get(domain_serviceName);
+			cache = urisMap.get(serviceName);
 		}
 		Collection<URI> colUris = cache.asMap().values();
 		return Arrays.copyOf(colUris.toArray(), colUris.size(), URI[].class);
@@ -146,12 +146,12 @@ class DiscoveryImpl implements Discovery {
 
 						var parts = msg.split(DELIMITER);
 						if (parts.length == 2) {
-							var domain_serviceName = parts[0];
+							var serviceName = parts[0];
 							var uri = URI.create(parts[1]);
-							Cache<String, URI> cache = urisMap.get(domain_serviceName);
+							Cache<String, URI> cache = urisMap.get(serviceName);
 							if (cache == null) {
 								cache = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build();
-								urisMap.put(domain_serviceName, cache);
+								urisMap.put(serviceName, cache);
 							}
 							cache.put(parts[1], uri);
 

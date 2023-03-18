@@ -1,4 +1,8 @@
 package sd2223.trab1.api;
+
+import java.util.Map;
+import java.util.HashMap;
+
 /**
  * Represents a user in the system. Note: the password of a user should not be
  * returned in any method.
@@ -8,6 +12,8 @@ public class User {
 	private String pwd;
 	private String displayName;
 	private String domain;
+	private Map<String, Map<String, User>> followers;
+	private Map<String, Map<String, User>> following;
 
 	public User() {
 		this.pwd = null;
@@ -21,6 +27,8 @@ public class User {
 		this.name = name;
 		this.domain = domain;
 		this.displayName = displayName;
+		followers = new HashMap<String, Map<String, User>>();
+		following = new HashMap<String, Map<String, User>>();
 	}
 
 	public String getName() {
@@ -53,6 +61,38 @@ public class User {
 
 	public void setDomain(String domain) {
 		this.domain = domain;
+	}
+
+	public void addFollower(User newFollower) {
+		Map<String, User> domainMap = followers.get(newFollower.getDomain());
+		if (domainMap == null)
+			followers.put(newFollower.getDomain(), domainMap = new HashMap<String, User>());
+
+		domainMap.put(newFollower.getName(), newFollower);
+	}
+
+	public void removeFollower(User oldFollower) {
+		Map<String, User> domainMap = followers.get(oldFollower.getDomain());
+		if (domainMap == null)
+			return;
+
+		domainMap.remove(oldFollower.getName());
+	}
+
+	public void addFollowing(User newFollowing) {
+		Map<String, User> domainMap = followers.get(newFollowing.getDomain());
+		if (domainMap == null)
+			followers.put(newFollowing.getDomain(), domainMap = new HashMap<String, User>());
+
+		domainMap.put(newFollowing.getName(), newFollowing);
+	}
+
+	public void removeFollowing(User oldFollowing) {
+		Map<String, User> domainMap = followers.get(oldFollowing.getDomain());
+		if (domainMap == null)
+			return;
+
+		domainMap.remove(oldFollowing.getName());
 	}
 
 	@Override

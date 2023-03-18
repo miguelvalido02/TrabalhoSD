@@ -15,7 +15,7 @@ public class FeedsResource implements FeedsService {
 
     // Message(long id, String user, String domain, String text)
 
-    private Map<String, Map<Long, Message>> feeds;
+    private Map<String, Map<Long, Message>> feeds;// userName,feed
 
     public FeedsResource() {
         this.feeds = new HashMap<String, Map<Long, Message>>();
@@ -28,13 +28,21 @@ public class FeedsResource implements FeedsService {
      * A user must contact the server of her domain directly (i.e., this operation
      * should not be
      * propagated to other domain)
+     * * @return 200 the unique numerical identifier for the posted message;
+     * 403 if the publisher does not exist in the current domain or if the
+     * pwd is not correct
+     * 400 otherwise
      **/
 
     @Override
     public long postMessage(String user, String pwd, Message msg) {
+        // getUser->verificar se deu erro
+        // se houver erro,trata los da maneira certa, ou seja, tranformar erros do user
+        // em erros do feed
+        // se der td bem, adicionar a mensagem ao proprio feed e aos seguidores
         UUID id = UUID.randomUUID();
-        long lid = id.getMostSignificantBits();
-        throw new UnsupportedOperationException("Unimplemented method 'postMessage'");
+        long mid = id.getMostSignificantBits();
+        return mid;
     }
 
     @Override
