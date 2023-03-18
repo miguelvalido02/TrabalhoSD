@@ -1,4 +1,4 @@
-package aula2.server;
+package sd2223.trab1.api.services;
 
 import java.net.InetAddress;
 import java.net.URI;
@@ -6,7 +6,6 @@ import java.util.logging.Logger;
 
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
-import aula2.server.resources.UsersResource;
 
 public class UsersServer {
 
