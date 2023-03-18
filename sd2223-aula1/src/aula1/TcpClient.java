@@ -10,6 +10,8 @@ import java.util.*;
 public class TcpClient {
 
 	private static final String QUIT = "!quit";
+	private static final String DELIMETER = "\t";
+	private static final String DIV = ":";
 
 	public static void main(String[] args) throws Exception {
 
@@ -20,6 +22,8 @@ public class TcpClient {
 		URI[] uris = d.knownUrisOf("serviceName", 1);
 		// <nome-do-domínio>:<serviço><tab><uri-do-servidor>
 		String[] decodedUri = decodeUri(uris[0].toString());
+		String domain = decodedUri[0];
+		String service = decodedUri[1];
 		// port = Integer.parseInt(uriString.split(":")[1]); // 9000
 		// hostname = uriString.split(":")[0]; // localhost
 
@@ -34,9 +38,9 @@ public class TcpClient {
 	}
 
 	private static String[] decodeUri(String uriString) {
-		String[] messageInfo = uriString.split(":");
+		String[] messageInfo = uriString.split(DIV);
 		String domain = messageInfo[0];
-		String[] messageInfo2 = messageInfo[1].split("\t");
+		String[] messageInfo2 = messageInfo[1].split(DELIMETER);
 		String service = messageInfo2[0];
 		String uri = messageInfo2[1];
 		return new String[] { domain, service, uri };
