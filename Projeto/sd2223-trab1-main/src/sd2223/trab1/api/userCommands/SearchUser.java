@@ -1,13 +1,13 @@
-package aula2.clients;
+package sd2223.trab1.api.userCommands;
 
 import java.io.IOException;
 import java.util.List;
 
 import org.glassfish.jersey.client.ClientConfig;
 
-import aula2.api.User;
-import aula2.api.service.RestUsers;
-import aula2.server.Discovery;
+import sd2223.trab1.api.User;
+import sd2223.trab1.api.rest.UsersService;
+import sd2223.trab1.api.services.Discovery;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.WebTarget;
@@ -16,12 +16,12 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 
-public class SearchUserClient {
+public class SearchUser {
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 
 		if (args.length != 2) {
-			System.err.println("Use: java aula2.clients.SearchUserClient serviceName query");
+			System.err.println("Use: java trab1.api.userCommands.SearchUserClient serviceName query");
 			return;
 		}
 
@@ -35,9 +35,9 @@ public class SearchUserClient {
 		ClientConfig config = new ClientConfig();
 		Client client = ClientBuilder.newClient(config);
 
-		WebTarget target = client.target(serviceName).path(RestUsers.PATH);
+		WebTarget target = client.target(serviceName).path(UsersService.PATH);
 
-		Response r = target.path("/").queryParam(RestUsers.QUERY, query).request()
+		Response r = target.path("/").queryParam(UsersService.QUERY, query).request()
 				.accept(MediaType.APPLICATION_JSON)
 				.get();
 

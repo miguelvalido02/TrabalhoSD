@@ -1,12 +1,12 @@
-package aula2.clients;
+package sd2223.trab1.api.userCommands;
 
 import java.io.IOException;
 
 import org.glassfish.jersey.client.ClientConfig;
 
-import aula2.api.User;
-import aula2.api.service.RestUsers;
-import aula2.server.Discovery;
+import sd2223.trab1.api.User;
+import sd2223.trab1.api.rest.UsersService;
+import sd2223.trab1.api.services.Discovery;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.WebTarget;
@@ -14,12 +14,12 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 
-public class DeleteUserClient {
+public class GetUser {
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 
 		if (args.length != 3) {
-			System.err.println("Use: java aula2.clients.DeleteUserClient serviceName userId password");
+			System.err.println("Use: java trab1.api.userCommands.GetUser serviceName userId password");
 			return;
 		}
 
@@ -34,16 +34,17 @@ public class DeleteUserClient {
 		ClientConfig config = new ClientConfig();
 		Client client = ClientBuilder.newClient(config);
 
-		WebTarget target = client.target(serviceName).path(RestUsers.PATH);
+		WebTarget target = client.target(serviceName).path(UsersService.PATH);
 
 		Response r = target.path(userId)
-				.queryParam(RestUsers.PASSWORD, password).request()
-				.accept(MediaType.APPLICATION_JSON).delete();
+				.queryParam(UsersService.PWD, password).request()
+				.accept(MediaType.APPLICATION_JSON)
+				.get();
 
 		if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
 			System.out.println("Success:");
 			var u = r.readEntity(User.class);
-			System.out.println("User Deleted: " + u);
+			System.out.println("User : " + u);
 		} else
 			System.out.println("Error, HTTP error status: " + r.getStatus());
 
