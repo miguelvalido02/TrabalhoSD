@@ -29,17 +29,19 @@ public class RestClient {
 		this.config = new ClientConfig();
 
 		config.property(ClientProperties.READ_TIMEOUT, READ_TIMEOUT);
-		config.property( ClientProperties.CONNECT_TIMEOUT, CONNECT_TIMEOUT);
-		
+		config.property(ClientProperties.CONNECT_TIMEOUT, CONNECT_TIMEOUT);
+
 		this.client = ClientBuilder.newClient(config);
 	}
 
 	protected <T> T reTry(Supplier<T> func) {
+		// método generico recebe uma funçao que quando invocada devolve T.
+		// createUser, etc...
 		for (int i = 0; i < MAX_RETRIES; i++)
 			try {
 				return func.get();
 			} catch (ProcessingException x) {
-				System.err.println( x.getMessage() );
+				System.err.println(x.getMessage());
 				Log.fine("ProcessingException: " + x.getMessage());
 				sleep(RETRY_SLEEP);
 			} catch (Exception x) {
