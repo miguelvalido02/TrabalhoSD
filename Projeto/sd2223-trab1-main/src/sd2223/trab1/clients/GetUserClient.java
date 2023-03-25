@@ -2,21 +2,26 @@ package sd2223.trab1.clients;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.concurrent.ConcurrentHashMap;
+
+import sd2223.trab1.server.Discovery;
 
 public class GetUserClient {
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 
 		if (args.length != 3) {
-			System.err.println("Use: java trab1.api.clients.GetUserClient serviceName name pwd");
+			System.err.println("Use: java -cp sd2223.jar sd2223.trab1.clients.GetUserClient serviceName name pwd");
 			return;
 		}
 
-		String serverUrl = args[0];
+		String serviceName = args[0];
 		String name = args[1];
 		String pwd = args[2];
 
 		System.out.println("Sending request to server.");
+
+		String serverUrl = Discovery.getInstance().knownUrisOf(serviceName, 1)[0].toString();
 
 		var result = new RestUsersClient(URI.create(serverUrl)).getUser(name, pwd);
 		System.out.println("Result: " + result);

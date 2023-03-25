@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,9 +32,10 @@ public interface Discovery {
 	 * Used to announce the URI of the given service name.
 	 * 
 	 * @param serviceName - the name of the service
+	 * @param domain      - the name of the domain
 	 * @param serviceURI  - the uri of the service
 	 */
-	public void announce(String serviceName, String serviceURI);
+	public void announce(String serviceName, String domain, String serviceURI);
 
 	/**
 	 * Get discovered URIs for a given service name
@@ -45,7 +47,7 @@ public interface Discovery {
 	 * @return array with the discovered URIs for the given service name.
 	 * @throws InterruptedException
 	 */
-	public URI[] knownUrisOf(String serviceName, int minReplies) throws InterruptedException;
+	public ConcurrentMap<String, URI> knownUrisOf(String serviceName, int minReplies) throws InterruptedException;
 
 	/**
 	 * Get the instance of the Discovery service
@@ -93,12 +95,12 @@ class DiscoveryImpl implements Discovery {
 	}
 
 	@Override
-	public void announce(String serviceName, String serviceURI) {
+	public void announce(String serviceName, String domain, String serviceURI) {
 		Log.info(String.format("Starting Discovery announcements on: %s for: %s -> %s\n", DISCOVERY_ADDR,
 				serviceName,
 				serviceURI));
 
-		var pktBytes = String.format("%s%s%s", serviceName, DELIMITER, serviceURI).getBytes();
+		var pktBytes = String.format("%s:%s%s%s", serviceName, domain, DELIMITER, serviceURI).getBytes();
 		var pkt = new DatagramPacket(pktBytes, pktBytes.length, DISCOVERY_ADDR);
 
 		// start thread to send periodic announcements
@@ -119,14 +121,13 @@ class DiscoveryImpl implements Discovery {
 	}
 
 	@Override
-	public URI[] knownUrisOf(String serviceName, int minEntries) throws InterruptedException {
+	public ConcurrentMap<String, URI> knownUrisOf(String serviceName, int minEntries) throws InterruptedException {
 		Cache<String, URI> cache = urisMap.get(serviceName);
 		while (cache == null || cache.size() < minEntries) {
 			Thread.sleep(DISCOVERY_ANNOUNCE_PERIOD);
 			cache = urisMap.get(serviceName);
 		}
-		Collection<URI> colUris = cache.asMap().values();
-		return Arrays.copyOf(colUris.toArray(), colUris.size(), URI[].class);
+		return cache.asMap(); // Key: domain, Value: URI
 
 	}
 
@@ -146,15 +147,17 @@ class DiscoveryImpl implements Discovery {
 
 						var parts = msg.split(DELIMITER);
 						if (parts.length == 2) {
-							var serviceName = parts[0];
-							var uri = URI.create(parts[1]);
+							String[] leftSide = parts[0].split(":");
+							String domain = leftSide[0];
+							String serviceName = leftSide[1];
+							var serverUrl = parts[1];
+							var uri = URI.create(serverUrl);
 							Cache<String, URI> cache = urisMap.get(serviceName);
 							if (cache == null) {
 								cache = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build();
 								urisMap.put(serviceName, cache);
 							}
-							cache.put(parts[1], uri);
-
+							cache.put(domain, uri);
 						}
 
 					} catch (Exception x) {

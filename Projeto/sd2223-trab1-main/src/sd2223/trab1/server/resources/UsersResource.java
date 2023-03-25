@@ -73,15 +73,13 @@ public class UsersResource implements UsersService {
 	public User updateUser(String name, String oldPwd, User user) {
 		Log.info("updateUser : name = " + name + "; pwd = " + oldPwd + " ; user = " + user);
 		var u = checkUser(name, oldPwd);
-		User updatedUser = null;
 		if (u != null) {
 			String pwd = user.getPwd() == null ? oldPwd : user.getPwd();
-			String domain = user.getDomain() == null ? u.getDomain() : user.getDomain();
 			String displayName = user.getDisplayName() == null ? u.getDisplayName() : user.getDisplayName();
-			updatedUser = new User(name, pwd, domain, displayName);
-			users.put(name, updatedUser);
+			u = new User(name, pwd, user.getDomain(), displayName);
+			users.put(name, u);
 		}
-		return updatedUser;
+		return u;
 	}
 
 	@Override

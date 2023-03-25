@@ -3,6 +3,8 @@ package sd2223.trab1.clients;
 import java.net.URI;
 import java.io.IOException;
 import sd2223.trab1.api.User;
+import sd2223.trab1.server.Discovery;
+
 import java.util.logging.Logger;
 
 public class CreateUserClient {
@@ -17,11 +19,12 @@ public class CreateUserClient {
 
 		if (args.length != 5) {
 			System.err
-					.println("Use: java trab1.api.clients.CreateUserClient serviceName name pwd domain displayName");
+					.println(
+							"Use: java -cp sd2223.jar sd2223.trab1.clients.CreateUserClient serviceName name pwd domain displayName");
 			return;
 		}
 
-		String serverUrl = args[0]; // O que entra aqui?
+		String serviceName = args[0];
 		String name = args[1];
 		String pwd = args[2];
 		String domain = args[3];
@@ -30,29 +33,11 @@ public class CreateUserClient {
 		var u = new User(name, pwd, domain, displayName);
 
 		Log.info("Sending request to server.");
+		// domain-1:users<tab>http://users.domain-1/rest
+		String serverUrl = Discovery.getInstance().knownUrisOf(serviceName, 1)[0].toString();
 
 		var result = new RestUsersClient(URI.create(serverUrl)).createUser(u);
 		System.out.println("Result: " + result);
-
-		/*
-		 * String serviceName = Discovery.getInstance().knownUrisOf(serverUrl,
-		 * 1)[0].toString();
-		 * 
-		 * ClientConfig config = new ClientConfig();
-		 * Client client = ClientBuilder.newClient(config);
-		 * 
-		 * WebTarget target = client.target(serviceName).path(UsersService.PATH);
-		 * 
-		 * Response r = target.request()
-		 * .accept(MediaType.APPLICATION_JSON)
-		 * .post(Entity.entity(u, MediaType.APPLICATION_JSON));
-		 * 
-		 * if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
-		 * System.out.println("Success, created user with id: " +
-		 * r.readEntity(String.class));
-		 * else
-		 * System.out.println("Error, HTTP error status: " + r.getStatus());
-		 */
 
 	}
 
