@@ -17,7 +17,7 @@ public class CreateUserClient {
 
 		if (args.length != 5) {
 			System.err
-					.println("Use: java trab1.api.userCommands.CreateUser serviceName name pwd domain displayName");
+					.println("Use: java trab1.api.clients.CreateUserClient serviceName name pwd domain displayName");
 			return;
 		}
 

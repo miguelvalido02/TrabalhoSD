@@ -8,7 +8,7 @@ public class GetUserClient {
 	public static void main(String[] args) throws IOException, InterruptedException {
 
 		if (args.length != 3) {
-			System.err.println("Use: java trab1.api.userCommands.GetUser serviceName name pwd");
+			System.err.println("Use: java trab1.api.clients.GetUserClient serviceName name pwd");
 			return;
 		}
 

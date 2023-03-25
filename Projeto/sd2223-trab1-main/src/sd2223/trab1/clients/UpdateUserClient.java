@@ -10,7 +10,7 @@ public class UpdateUserClient {
 
 		if (args.length != 6) {
 			System.err.println(
-					"Use: java trab1.api.userCommands.UpdateUser serviceName name oldpwd pwd domain displayName");
+					"Use: java trab1.api.clients.UpdateUserClient serviceName name oldpwd pwd domain displayName");
 			return;
 		}
 
