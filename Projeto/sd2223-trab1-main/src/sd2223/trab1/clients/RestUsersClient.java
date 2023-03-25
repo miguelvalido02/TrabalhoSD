@@ -38,7 +38,7 @@ public class RestUsersClient extends RestClient implements UsersService {
     }
 
     private User clt_getUser(String name, String pwd) {
-
+        User u = null;
         Response r = target.path(name)
                 .queryParam(UsersService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
@@ -46,60 +46,64 @@ public class RestUsersClient extends RestClient implements UsersService {
 
         if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
             System.out.println("Success:");
-            var u = r.readEntity(User.class);
+            u = r.readEntity(User.class);
             System.out.println("User : " + u);
         } else
             System.out.println("Error, HTTP error status: " + r.getStatus());
 
-        return null;
+        return u;
     }
 
     private User clt_updateUser(String name, String pwd, User user) {
-
+        User u = null;
         Response r = target.path(name)
                 .queryParam(UsersService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .put(Entity.entity(user, MediaType.APPLICATION_JSON));
 
-        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
-            System.out.println("Success, user updated with id: " + r.readEntity(String.class));
-        else
+        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
+            System.out.println("Success:");
+            u = r.readEntity(User.class);
+            System.out.println("User updated: " + u);
+        } else
             System.out.println("Error, HTTP error status: " + r.getStatus());
 
-        return null;
+        return u;
 
     }
 
     private User clt_deleteUser(String name, String pwd) {
+        User u = null;
         Response r = target.path(name)
                 .queryParam(UsersService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON).delete();
 
         if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
             System.out.println("Success:");
-            var u = r.readEntity(User.class);
+            u = r.readEntity(User.class);
             System.out.println("User Deleted: " + u);
         } else
             System.out.println("Error, HTTP error status: " + r.getStatus());
 
-        return null;
+        return u;
 
     }
 
     private List<User> clt_searchUsers(String pattern) {
+        List<User> users = null;
         Response r = target.path("/").queryParam(UsersService.QUERY, pattern).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
 
         if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
-            var users = r.readEntity(new GenericType<List<User>>() {
+            users = r.readEntity(new GenericType<List<User>>() {
             });
             System.out.println("Success: (" + users.size() + " users)");
             users.stream().forEach(u -> System.out.println(u));
         } else
             System.out.println("Error, HTTP error status: " + r.getStatus());
 
-        return null;
+        return users;
     }
 
     @Override

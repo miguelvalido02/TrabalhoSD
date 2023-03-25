@@ -10,7 +10,7 @@ public class UpdateUserClient {
 
 		if (args.length != 6) {
 			System.err.println(
-					"Use: java trab1.api.clients.UpdateUserClient serviceName name oldpwd pwd domain displayName");
+					"Use: java trab1.api.clients.UpdateUserClient serviceName name oldpwd pwd displayName domain");
 			return;
 		}
 
@@ -18,14 +18,14 @@ public class UpdateUserClient {
 		String name = args[1];
 		String oldpwd = args[2];
 		String pwd = args[3];
-		String displayName = args[5];
 		String domain = args[4];
+		String displayName = args[5];
 
 		var u = new User(name, pwd, domain, displayName);
 
 		System.out.println("Sending request to server.");
 
-		var result = new RestUsersClient(URI.create(serverUrl)).updateUser(displayName, oldpwd, u);
+		var result = new RestUsersClient(URI.create(serverUrl)).updateUser(name, oldpwd, u);
 		System.out.println("Result: " + result);
 
 		/*

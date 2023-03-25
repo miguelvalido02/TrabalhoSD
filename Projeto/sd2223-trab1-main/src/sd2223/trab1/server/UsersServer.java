@@ -25,7 +25,7 @@ public class UsersServer {
 	public static void main(String[] args) {
 		try {
 			if (args.length != 1) {
-				System.err.println("Use: java trab1.api.services.UsersServer domain");
+				System.err.println("Use: java trab1.server.UsersServer domain");
 				return;
 			}
 

@@ -41,18 +41,13 @@ public class UsersResource implements UsersService {
 		return user.getName() + "@" + user.getDomain();
 	}
 
-	@Override
-	public User getUser(String name, String pwd) {
-		Log.info("getUser : user = " + name + "; pwd = " + pwd);
-
+	private User checkUser(String name, String pwd) {
 		// Check if user is valid
 		if (name == null || pwd == null) {
 			Log.info("name or pwd null.");
 			throw new WebApplicationException(Status.BAD_REQUEST);
 		}
-
 		var user = users.get(name);
-
 		// Check if user exists
 		if (user == null) {
 			Log.info("User does not exist.");
@@ -69,9 +64,15 @@ public class UsersResource implements UsersService {
 	}
 
 	@Override
+	public User getUser(String name, String pwd) {
+		Log.info("getUser : name = " + name + "; pwd = " + pwd);
+		return checkUser(name, pwd);
+	}
+
+	@Override
 	public User updateUser(String name, String oldPwd, User user) {
 		Log.info("updateUser : name = " + name + "; pwd = " + oldPwd + " ; user = " + user);
-		var u = getUser(name, oldPwd);
+		var u = checkUser(name, oldPwd);
 		User updatedUser = null;
 		if (u != null) {
 			String pwd = user.getPwd() == null ? oldPwd : user.getPwd();
@@ -86,7 +87,7 @@ public class UsersResource implements UsersService {
 	@Override
 	public User deleteUser(String name, String pwd) {
 		Log.info("deleteUser : user = " + name + "; pwd = " + pwd);
-		getUser(name, pwd);
+		checkUser(name, pwd);
 		return users.remove(name);
 	}
 
