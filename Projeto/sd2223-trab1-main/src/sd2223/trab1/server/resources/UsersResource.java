@@ -1,4 +1,4 @@
-package sd2223.trab1.api.services;
+package sd2223.trab1.server.resources;
 
 import java.util.ArrayList;
 import java.util.HashMap;

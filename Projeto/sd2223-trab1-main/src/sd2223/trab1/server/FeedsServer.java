@@ -1,4 +1,4 @@
-package sd2223.trab1.api.services;
+package sd2223.trab1.server;
 
 import java.net.InetAddress;
 import java.net.URI;
@@ -6,6 +6,8 @@ import java.util.logging.Logger;
 
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
+
+import sd2223.trab1.server.resources.UsersResource;
 
 public class FeedsServer {
 
