@@ -12,7 +12,6 @@ import java.util.logging.Logger;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.Arrays;
 import java.util.Collection;
@@ -70,7 +69,7 @@ class DiscoveryImpl implements Discovery {
 	// The pre-aggreed multicast endpoint assigned to perform discovery.
 
 	static final int DISCOVERY_RETRY_TIMEOUT = 5000;
-	static final int DISCOVERY_ANNOUNCE_PERIOD = 1000;
+	static final int DISCOVERY_ANNOUNCE_PERIOD = 15000;// 15 sec
 
 	// Replace with appropriate values...
 	static final InetSocketAddress DISCOVERY_ADDR = new InetSocketAddress("230.120.130.145", 1234);

@@ -12,8 +12,8 @@ public class User {
 	private String pwd;
 	private String displayName;
 	private String domain;
-	private Map<String, Map<String, User>> followers;
-	private Map<String, Map<String, User>> following;
+	private Map<String, Map<String, User>> followers;// <domain,<name,user>>
+	private Map<String, Map<String, User>> following;// <domain,<name,user>>
 
 	public User() {
 		this.pwd = null;
@@ -80,15 +80,15 @@ public class User {
 	}
 
 	public void addFollowing(User newFollowing) {
-		Map<String, User> domainMap = followers.get(newFollowing.getDomain());
+		Map<String, User> domainMap = following.get(newFollowing.getDomain());
 		if (domainMap == null)
-			followers.put(newFollowing.getDomain(), domainMap = new HashMap<String, User>());
+			following.put(newFollowing.getDomain(), domainMap = new HashMap<String, User>());
 
 		domainMap.put(newFollowing.getName(), newFollowing);
 	}
 
 	public void removeFollowing(User oldFollowing) {
-		Map<String, User> domainMap = followers.get(oldFollowing.getDomain());
+		Map<String, User> domainMap = following.get(oldFollowing.getDomain());
 		if (domainMap == null)
 			return;
 

@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 public class CreateUserClient {
 
 	private static Logger Log = Logger.getLogger(CreateUserClient.class.getName());
+	public static final String SERVICE = "users";
 
 	static {
 		System.setProperty("java.net.preferIPv4Stack", "true");
@@ -17,24 +18,23 @@ public class CreateUserClient {
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 
-		if (args.length != 5) {
+		if (args.length != 4) {
 			System.err
 					.println(
-							"Use: java -cp sd2223.jar sd2223.trab1.clients.CreateUserClient serviceName name pwd domain displayName");
+							"Use: java -cp sd2223.jar sd2223.trab1.clients.CreateUserClient name pwd domain displayName");
 			return;
 		}
 
-		String serviceName = args[0];
-		String name = args[1];
-		String pwd = args[2];
-		String domain = args[3];
-		String displayName = args[4];
+		String name = args[0];
+		String pwd = args[1];
+		String domain = args[2];
+		String displayName = args[3];
 
 		var u = new User(name, pwd, domain, displayName);
 
 		Log.info("Sending request to server.");
 		// domain-1:users<tab>http://users.domain-1/rest
-		String serverUrl = Discovery.getInstance().knownUrisOf(domain, serviceName, 1)[0].toString();
+		String serverUrl = Discovery.getInstance().knownUrisOf(domain, SERVICE, 1)[0].toString();
 
 		var result = new RestUsersClient(URI.create(serverUrl)).createUser(u);
 		System.out.println("Result: " + result);

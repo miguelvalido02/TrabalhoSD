@@ -5,17 +5,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import jakarta.inject.Singleton;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.rest.FeedsService;
+import sd2223.trab1.server.Discovery;
+import java.net.URI;
 
 // Implementa FeedsService
-
+@Singleton
 public class FeedsResource implements FeedsService {
 
     // Message(long id, String user, String domain, String text)
 
-    private Map<String, Map<Long, Message>> feeds;// userName,feed
+    private Map<String, Map<Long, Message>> feeds;// <name,<mid,feed>>
+    private static final String USERS_SERVICE = "users";
 
     public FeedsResource() {
         this.feeds = new HashMap<String, Map<Long, Message>>();
@@ -44,6 +48,11 @@ public class FeedsResource implements FeedsService {
         // se houver erro,trata los da maneira certa, ou seja, tranformar erros do user
         // em erros do feed
         // se der td bem, adicionar a mensagem ao proprio feed e aos seguidores
+        Discovery d = Discovery.getInstance();
+        try {
+            URI userUri = d.knownUrisOf(domain, USERS_SERVICE, 1)[0];
+        } catch (InterruptedException e) {
+        }
         UUID id = UUID.randomUUID();
         long mid = id.getMostSignificantBits();
 
@@ -52,31 +61,49 @@ public class FeedsResource implements FeedsService {
 
     @Override
     public void removeFromPersonalFeed(String user, long mid, String pwd) {
+        String[] userSplitted = user.split("@");
+        String name = userSplitted[0];
+        String domain = userSplitted[1];
         throw new UnsupportedOperationException("Unimplemented method 'removeFromPersonalFeed'");
     }
 
     @Override
     public Message getMessage(String user, long mid) {
+        String[] userSplitted = user.split("@");
+        String name = userSplitted[0];
+        String domain = userSplitted[1];
         throw new UnsupportedOperationException("Unimplemented method 'getMessage'");
     }
 
     @Override
     public List<Message> getMessages(String user, long time) {
+        String[] userSplitted = user.split("@");
+        String name = userSplitted[0];
+        String domain = userSplitted[1];
         throw new UnsupportedOperationException("Unimplemented method 'getMessages'");
     }
 
     @Override
     public void subUser(String user, String userSub, String pwd) {
+        String[] userSplitted = user.split("@");
+        String name = userSplitted[0];
+        String domain = userSplitted[1];
         throw new UnsupportedOperationException("Unimplemented method 'subUser'");
     }
 
     @Override
     public void unsubscribeUser(String user, String userSub, String pwd) {
+        String[] userSplitted = user.split("@");
+        String name = userSplitted[0];
+        String domain = userSplitted[1];
         throw new UnsupportedOperationException("Unimplemented method 'unsubscribeUser'");
     }
 
     @Override
     public List<User> listSubs(String user) {
+        String[] userSplitted = user.split("@");
+        String name = userSplitted[0];
+        String domain = userSplitted[1];
         throw new UnsupportedOperationException("Unimplemented method 'listSubs'");
     }
 

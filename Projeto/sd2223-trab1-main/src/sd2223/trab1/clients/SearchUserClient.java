@@ -6,26 +6,25 @@ import java.net.URI;
 import sd2223.trab1.server.Discovery;
 
 public class SearchUserClient {
-
+	public static final String SERVICE = "users";
 	static {
 		System.setProperty("java.net.preferIPv4Stack", "true");
 	}
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 
-		if (args.length != 3) {
+		if (args.length != 2) {
 			System.err
-					.println("Use: java -cp sd2223.jar sd2223.trab1.clients.SearchUserClient domain serviceName query");
+					.println("Use: java -cp sd2223.jar sd2223.trab1.clients.SearchUserClient domain query");
 			return;
 		}
 
 		String domain = args[0];
-		String serviceName = args[1];
-		String query = args[2];
+		String query = args[1];
 
 		System.out.println("Sending request to server.");
 
-		String serverUrl = Discovery.getInstance().knownUrisOf(domain, serviceName, 1)[0].toString();
+		String serverUrl = Discovery.getInstance().knownUrisOf(domain, SERVICE, 1)[0].toString();
 
 		var result = new RestUsersClient(URI.create(serverUrl)).searchUsers(query);
 		System.out.println("Result: " + result);
