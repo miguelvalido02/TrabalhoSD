@@ -1,9 +1,9 @@
 package sd2223.trab1.server.resources;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.inject.Singleton;
 import sd2223.trab1.api.Message;
@@ -15,14 +15,13 @@ import java.net.URI;
 // Implementa FeedsService
 @Singleton
 public class FeedsResource implements FeedsService {
-
+    private static final String USERS_SERVICE = "users";
     // Message(long id, String user, String domain, String text)
 
     private Map<String, Map<Long, Message>> feeds;// <name,<mid,feed>>
-    private static final String USERS_SERVICE = "users";
 
     public FeedsResource() {
-        this.feeds = new HashMap<String, Map<Long, Message>>();
+        this.feeds = new ConcurrentHashMap<String, Map<Long, Message>>();
     }
 
     /**
@@ -48,13 +47,14 @@ public class FeedsResource implements FeedsService {
         // se houver erro,trata los da maneira certa, ou seja, tranformar erros do user
         // em erros do feed
         // se der td bem, adicionar a mensagem ao proprio feed e aos seguidores
+        UUID id = UUID.randomUUID();
+        long mid = id.getMostSignificantBits();
         Discovery d = Discovery.getInstance();
         try {
             URI userUri = d.knownUrisOf(domain, USERS_SERVICE, 1)[0];
+
         } catch (InterruptedException e) {
         }
-        UUID id = UUID.randomUUID();
-        long mid = id.getMostSignificantBits();
 
         return mid;
     }
