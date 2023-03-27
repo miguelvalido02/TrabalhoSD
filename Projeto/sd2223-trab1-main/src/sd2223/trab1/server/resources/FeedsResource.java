@@ -36,12 +36,17 @@ public class FeedsResource implements FeedsService {
 
     @Override
     public long postMessage(String user, String pwd, Message msg) {
+        String[] userSplitted = user.split("@");
+        String name = userSplitted[0];
+        String domain = userSplitted[1];
+
         // getUser->verificar se deu erro
         // se houver erro,trata los da maneira certa, ou seja, tranformar erros do user
         // em erros do feed
         // se der td bem, adicionar a mensagem ao proprio feed e aos seguidores
         UUID id = UUID.randomUUID();
         long mid = id.getMostSignificantBits();
+
         return mid;
     }
 

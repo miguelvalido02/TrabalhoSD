@@ -34,7 +34,7 @@ public class CreateUserClient {
 
 		Log.info("Sending request to server.");
 		// domain-1:users<tab>http://users.domain-1/rest
-		String serverUrl = Discovery.getInstance().knownUrisOf(serviceName, 1)[0].toString();
+		String serverUrl = Discovery.getInstance().knownUrisOf(domain, serviceName, 1)[0].toString();
 
 		var result = new RestUsersClient(URI.create(serverUrl)).createUser(u);
 		System.out.println("Result: " + result);

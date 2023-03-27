@@ -42,7 +42,7 @@ public class UsersServer {
 
 			// More code can be executed here...
 			Discovery d = Discovery.getInstance();
-			d.announce(domain + ":" + SERVICE, serverURI);
+			d.announce(domain, SERVICE, serverURI);
 
 		} catch (Exception e) {
 			Log.severe(e.getMessage());

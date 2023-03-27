@@ -25,7 +25,7 @@ public class FeedsServer {
     public static void main(String[] args) {
         try {
             if (args.length != 1) {
-                System.err.println("Use: java trab1.api.services.FeedsServer domain");
+                System.err.println("Use: java trab1.server.FeedsServer domain");
                 return;
             }
 
@@ -42,7 +42,7 @@ public class FeedsServer {
 
             // More code can be executed here...
             Discovery d = Discovery.getInstance();
-            d.announce(SERVICE, serverURI);
+            d.announce(domain, SERVICE, serverURI);
 
         } catch (Exception e) {
             Log.severe(e.getMessage());
