@@ -9,23 +9,24 @@ public class UpdateUserClient {
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 
-		if (args.length != 5) {
+		if (args.length != 6) {
 			System.err.println(
-					"Use: java -cp sd2223.jar sd2223.trab1.clients.UpdateUserClient serviceName name oldpwd pwd displayName");
+					"Use: java -cp sd2223.jar sd2223.trab1.clients.UpdateUserClient domain serviceName name oldpwd pwd displayName");
 			return;
 		}
 
-		String serviceName = args[0];
-		String name = args[1];
-		String oldpwd = args[2];
-		String pwd = args[3];
-		String displayName = args[4];
+		String domain = args[0];
+		String serviceName = args[1];
+		String name = args[2];
+		String oldpwd = args[3];
+		String pwd = args[4];
+		String displayName = args[5];
 
 		var u = new User(null, pwd, null, displayName);
 
 		System.out.println("Sending request to server.");
 
-		String serverUrl = Discovery.getInstance().knownUrisOf(serviceName, 1)[0].toString();
+		String serverUrl = Discovery.getInstance().knownUrisOf(domain, serviceName, 1)[0].toString();
 
 		var result = new RestUsersClient(URI.create(serverUrl)).updateUser(name, oldpwd, u);
 		System.out.println("Result: " + result);
