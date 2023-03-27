@@ -1,11 +1,13 @@
-package sd2223.trab1.feeds;
+package sd2223.trab1.clients;
 
 import java.net.URI;
 import java.util.List;
+import java.util.UUID;
 
+import sd2223.trab1.api.Message;
 import sd2223.trab1.api.User;
+import sd2223.trab1.api.rest.FeedsService;
 import sd2223.trab1.api.rest.UsersService;
-import sd2223.trab1.clients.RestClient;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.GenericType;
@@ -13,7 +15,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 
-public class RestFeedsClient extends RestClient implements UsersService {
+public class RestFeedsClient extends RestClient implements FeedsService {
 
     final WebTarget target;
 
@@ -22,40 +24,42 @@ public class RestFeedsClient extends RestClient implements UsersService {
         target = client.target(serverURI).path(UsersService.PATH);
     }
 
-    private String clt_createUser(User user) { // Invocação jersey sem comportamento de repetição
-        // teste de falhas -> metodo auxiliar, privado com outro nome
-        // FAZ o PEDIDO do CREATE USER
+    private long clt_postMessage(String user, String pwd, Message msg) {
+        String[] nameDomain = user.split("@");
+        String name = nameDomain[0];
+        String domain = nameDomain[1];
+        UUID id = UUID.randomUUID();
+        long mid = id.getMostSignificantBits();
+        msg.setId(mid);
+        Response r = target.path(name).path(domain)
+                .queryParam(UsersService.PWD, pwd).request()
+                .accept(MediaType.APPLICATION_JSON)
+                .post(Entity.entity(user, MediaType.APPLICATION_JSON));
+
+        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
+            System.out.println("Success:");
+            mid = r.readEntity(Long.class);
+            System.out.println("Message id: " + mid);
+        } else
+            System.out.println("Error, HTTP error status: " + r.getStatus());
+
+        return mid;
+    }
+
+    private void clt_removeFromPersonalFeed(String user, long mid, String pwd) {
 
         Response r = target.request()
                 .accept(MediaType.APPLICATION_JSON)
                 .post(Entity.entity(user, MediaType.APPLICATION_JSON));
 
         if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
-            return r.readEntity(String.class);
+            r.readEntity(String.class);
         else
             System.out.println("Error, HTTP error status: " + r.getStatus());
 
-        return null;
     }
 
-    private User clt_getUser(String name, String pwd) {
-        User u = null;
-        Response r = target.path(name)
-                .queryParam(UsersService.PWD, pwd).request()
-                .accept(MediaType.APPLICATION_JSON)
-                .get();
-
-        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
-            System.out.println("Success:");
-            u = r.readEntity(User.class);
-            System.out.println("User : " + u);
-        } else
-            System.out.println("Error, HTTP error status: " + r.getStatus());
-
-        return u;
-    }
-
-    private User clt_updateUser(String name, String pwd, User user) {
+    private Message clt_getMessage(String user, long mid) {
         User u = null;
         Response r = target.path(name)
                 .queryParam(UsersService.PWD, pwd).request()
@@ -73,7 +77,9 @@ public class RestFeedsClient extends RestClient implements UsersService {
 
     }
 
-    private User clt_deleteUser(String name, String pwd) {
+    // List<Message> getMessages(@PathParam(USER) String user, @QueryParam(TIME)
+    // long time);
+    private List<Message> clt_getMessages(String user, long time) {
         User u = null;
         Response r = target.path(name)
                 .queryParam(UsersService.PWD, pwd).request()
@@ -90,7 +96,41 @@ public class RestFeedsClient extends RestClient implements UsersService {
 
     }
 
-    private List<User> clt_searchUsers(String pattern) {
+    private void clt_subUser(String user, String userSub, String pwd) {
+        List<User> users = null;
+        Response r = target.path("/").queryParam(UsersService.QUERY, pattern).request()
+                .accept(MediaType.APPLICATION_JSON)
+                .get();
+
+        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
+            users = r.readEntity(new GenericType<List<User>>() {
+            });
+            System.out.println("Success: (" + users.size() + " users)");
+            users.stream().forEach(u -> System.out.println(u));
+        } else
+            System.out.println("Error, HTTP error status: " + r.getStatus());
+
+        return users;
+    }
+
+    private void clt_unsubscribeUser(String user, String userSub, String pwd) {
+        List<User> users = null;
+        Response r = target.path("/").queryParam(UsersService.QUERY, pattern).request()
+                .accept(MediaType.APPLICATION_JSON)
+                .get();
+
+        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
+            users = r.readEntity(new GenericType<List<User>>() {
+            });
+            System.out.println("Success: (" + users.size() + " users)");
+            users.stream().forEach(u -> System.out.println(u));
+        } else
+            System.out.println("Error, HTTP error status: " + r.getStatus());
+
+        return users;
+    }
+
+    private List<User> clt_listSubs(String user) {
         List<User> users = null;
         Response r = target.path("/").queryParam(UsersService.QUERY, pattern).request()
                 .accept(MediaType.APPLICATION_JSON)
@@ -108,27 +148,49 @@ public class RestFeedsClient extends RestClient implements UsersService {
     }
 
     @Override
-    public String createUser(User user) {
-        return super.reTry(() -> clt_createUser(user));
+    public long postMessage(String user, String pwd, Message msg) {
+        return super.reTry(() -> clt_postMessage(user, pwd, msg));
     }
 
     @Override
-    public User getUser(String name, String pwd) {
-        return super.reTry(() -> clt_getUser(name, pwd));
+    public void removeFromPersonalFeed(String user, long mid, String pwd) {
+        super.reTry(() -> {
+            clt_removeFromPersonalFeed(user, mid, pwd);
+            return null;
+        });
+
     }
 
     @Override
-    public User updateUser(String name, String pwd, User user) {
-        return super.reTry(() -> clt_updateUser(name, pwd, user));
+    public Message getMessage(String user, long mid) {
+        return super.reTry(() -> clt_getMessage(user, mid));
     }
 
     @Override
-    public User deleteUser(String name, String pwd) {
-        return super.reTry(() -> clt_deleteUser(name, pwd));
+    public List<Message> getMessages(String user, long time) {
+        return super.reTry(() -> clt_getMessages(user, time));
     }
 
     @Override
-    public List<User> searchUsers(String pattern) {
-        return super.reTry(() -> clt_searchUsers(pattern));
+    public void subUser(String user, String userSub, String pwd) {
+        super.reTry(() -> {
+            clt_subUser(user, userSub, pwd);
+            return null;
+        });
+
     }
+
+    @Override
+    public void unsubscribeUser(String user, String userSub, String pwd) {
+        super.reTry(() -> {
+            clt_unsubscribeUser(user, userSub, pwd);
+            return null;
+        });
+    }
+
+    @Override
+    public List<User> listSubs(String user) {
+        return super.reTry(() -> clt_listSubs(user));
+    }
+
 }

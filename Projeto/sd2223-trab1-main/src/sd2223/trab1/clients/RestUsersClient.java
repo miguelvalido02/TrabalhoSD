@@ -3,6 +3,7 @@ package sd2223.trab1.clients;
 import java.net.URI;
 import java.util.List;
 
+import sd2223.trab1.api.Message;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.rest.UsersService;
 import jakarta.ws.rs.client.Entity;
