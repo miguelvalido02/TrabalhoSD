@@ -126,7 +126,7 @@ public class RestFeedsClient extends RestClient implements FeedsService {
         return users;
     }
 
-    private List<User> clt_listSubs(String user) {
+    private List<String> clt_listSubs(String user) {
         List<User> users = null;
         Response r = target.path("/").queryParam(UsersService.QUERY, pattern).request()
                 .accept(MediaType.APPLICATION_JSON)
@@ -185,7 +185,7 @@ public class RestFeedsClient extends RestClient implements FeedsService {
     }
 
     @Override
-    public List<User> listSubs(String user) {
+    public List<String> listSubs(String user) {
         return super.reTry(() -> clt_listSubs(user));
     }
 

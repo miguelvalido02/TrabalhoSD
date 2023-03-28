@@ -12,8 +12,9 @@ public class User {
 	private String pwd;
 	private String displayName;
 	private String domain;
-	private Map<String, Map<String, User>> followers;// <domain,<name,user>>
-	private Map<String, Map<String, User>> following;// <domain,<name,user>>
+	private Map<String, Map<String, User>> followers;// <domain,<name,user>> TODO nao devia ser so
+														// <domain,List<name>>????
+	private Map<String, Map<String, User>> following;// <domain,<name,user>> TODO sera que precisamos?
 
 	public User() {
 		this.pwd = null;

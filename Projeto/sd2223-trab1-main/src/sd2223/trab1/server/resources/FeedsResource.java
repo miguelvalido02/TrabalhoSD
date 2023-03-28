@@ -89,8 +89,21 @@ public class FeedsResource implements FeedsService {
         return mid;
     }
 
-    private void sendOutsideDomain(User u, Message msg) {
+    private void sendOutsideDomain(User u, Message msg) { // TODO meter isto com retry e criar uma thread para cada
+                                                          // retry/para cada dominio
+        Discovery d = Discovery.getInstance();
+        // Para cada dominio dos followers enviar um pedido de postOutside
+        Iterator<String> it = u.getFollowers().keySet().iterator();
+        while (it.hasNext()) {
+            String domain = it.next();
+            try {
+                URI userURI = d.knownUrisOf(domain, USERS_SERVICE);
+                WebTarget target = client.target(userURI).path(FeedsService.PATH).path("post").path(domain);
 
+            } catch (InterruptedException e) {
+            }
+
+        }
     }
 
     private void postInDomain(User u, Message msg) {
@@ -107,9 +120,13 @@ public class FeedsResource implements FeedsService {
     }
 
     @Override
-    public void postOutside(User user, String pwd, Message msg) {
-        for (User follower : user.getFollowers().get(Domain.getDomain()).values())
-            feeds.get(follower.getName()).put(msg);
+    public void postOutside(User user, Message msg) {
+        for (User follower : user.getFollowers().get(Domain.getDomain()).values()) {
+            Map<Long, Message> feed = feeds.get(follower.getName());
+            if (feed == null)
+                feeds.put(follower.getName(), feed = new ConcurrentHashMap<Long, Message>());
+            feed.put(msg.getId(), msg);
+        }
     }
 
     private User getUser(String name, String pwd, WebTarget target, Status userPwdError) {
