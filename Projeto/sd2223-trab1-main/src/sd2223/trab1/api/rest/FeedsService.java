@@ -48,6 +48,12 @@ public interface FeedsService {
 	@Produces(MediaType.APPLICATION_JSON)
 	long postMessage(@PathParam(USER) String user, @QueryParam(PWD) String pwd, Message msg);
 
+	@POST
+	@Path("/{" + USER + "}/{" + DOMAIN + "}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	void postOutside(@PathParam(USER) User user, @QueryParam(PWD) String pwd, Message msg);
+
 	/**
 	 * Removes the message identified by mid from the feed of user.
 	 * A user must contact the server of her domain directly (i.e., this operation
@@ -144,5 +150,5 @@ public interface FeedsService {
 	@GET
 	@Path("/sub/list/{" + USER + "}")
 	@Produces(MediaType.APPLICATION_JSON)
-	List<User> listSubs(@PathParam(USER) String user);
+	List<String> listSubs(@PathParam(USER) String user);
 }

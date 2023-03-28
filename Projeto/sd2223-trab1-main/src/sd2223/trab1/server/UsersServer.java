@@ -30,7 +30,7 @@ public class UsersServer {
 			}
 
 			String domain = args[0];
-
+			Domain.setDomain(domain);
 			ResourceConfig config = new ResourceConfig();
 			config.register(UsersResource.class);
 
