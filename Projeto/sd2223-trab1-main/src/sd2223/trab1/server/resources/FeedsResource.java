@@ -81,11 +81,7 @@ public class FeedsResource implements FeedsService {
         msg.setId(mid);
         Map<Long, Message> userFeed = feeds.get(name);
         if (userFeed == null)
-            userFeed = new ConcurrentHashMap<Long, Message>();// TODO mandar uma de engenheiro->meter todos os users na
-                                                              // lista dos seus proprios followers, pois assim
-                                                              // eliminamos a necessidade de ter o metodo postInDomain e
-                                                              // eliminamos a necessidade de meter a message no feed do
-                                                              // user pois o sendOutsideDomain tratara de tudo
+            userFeed = new ConcurrentHashMap<Long, Message>();
         userFeed.put(mid, msg);
         // colocar mensagens nos feeds dos users do mesmo dominio
         postInDomain(u, msg);
@@ -95,23 +91,34 @@ public class FeedsResource implements FeedsService {
         return mid;
     }
 
-    private void sendOutsideDomain(User u, Message msg) { // TODO meter isto com retry e criar uma thread para cada
-                                                          // retry/para cada dominio
+    private void sendOutsideDomain(User u, Message msg) {
         Discovery d = Discovery.getInstance();
         // Para cada dominio dos followers enviar um pedido de postOutside
         Iterator<String> it = u.getFollowers().keySet().iterator();
         while (it.hasNext()) {
             String domain = it.next();
-            try {
-                URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
-                WebTarget target = client.target(userURI).path(FeedsService.PATH).path("post").path(domain);
-                Response r = target.request()
-                        .accept(MediaType.APPLICATION_JSON)
-                        .post(Entity.entity(u, MediaType.APPLICATION_JSON));
+            Object[] data = new Object[] { u, msg };
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    reTry(() -> {
+                        requestPostOutsideDomain(domain, d, u, msg, data);
+                        return null;
+                    });
+                }
+            });
 
-            } catch (InterruptedException e) {
-            }
+            thread.start();
+        }
+    }
 
+    private void requestPostOutsideDomain(String domain, Discovery d, User u, Message msg, Object[] data) {
+        try {
+            URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
+            WebTarget target = client.target(userURI).path(FeedsService.PATH).path("post");
+            target.request().post(Entity.entity(data, MediaType.APPLICATION_JSON));
+
+        } catch (InterruptedException e) {
         }
     }
 
@@ -129,7 +136,9 @@ public class FeedsResource implements FeedsService {
     }
 
     @Override
-    public void postOutside(User user, Message msg) {
+    public void postOutside(Object[] data) {
+        User user = (User) data[0];
+        Message msg = (Message) data[1];
         for (User follower : user.getFollowers().get(Domain.getDomain()).values()) {
             Map<Long, Message> feed = feeds.get(follower.getName());
             if (feed == null)

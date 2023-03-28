@@ -34,7 +34,7 @@ public class RestFeedsClient extends RestClient implements FeedsService {
                 .post(Entity.entity(user, MediaType.APPLICATION_JSON));
 
         if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
-            System.out.println("Success:");
+            System.out.println("Success");
             return r.readEntity(Long.class);
         } else
             System.out.println("Error, HTTP error status: " + r.getStatus());
@@ -187,6 +187,10 @@ public class RestFeedsClient extends RestClient implements FeedsService {
     @Override
     public List<String> listSubs(String user) {
         return super.reTry(() -> clt_listSubs(user));
+    }
+
+    @Override
+    public void postOutside(Object[] data) {
     }
 
 }

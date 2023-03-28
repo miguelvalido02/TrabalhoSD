@@ -49,10 +49,9 @@ public interface FeedsService {
 	long postMessage(@PathParam(USER) String user, @QueryParam(PWD) String pwd, Message msg);
 
 	@POST
-	@Path("/post/{" + DOMAIN + "}")
+	@Path("/post")
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	void postOutside(@PathParam(USER) User user, Message msg);
+	void postOutside(Object[] data);
 
 	/**
 	 * Removes the message identified by mid from the feed of user.

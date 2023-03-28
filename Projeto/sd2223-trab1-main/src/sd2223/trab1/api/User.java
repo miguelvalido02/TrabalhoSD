@@ -14,7 +14,6 @@ public class User {
 	private String domain;
 	private Map<String, Map<String, User>> followers;// <domain,<name,user>> TODO nao devia ser so
 														// <domain,List<name>>????
-	private Map<String, Map<String, User>> following;// <domain,<name,user>> TODO sera que precisamos?
 
 	public User() {
 		this.pwd = null;
@@ -29,7 +28,6 @@ public class User {
 		this.domain = domain;
 		this.displayName = displayName;
 		followers = new HashMap<String, Map<String, User>>();
-		following = new HashMap<String, Map<String, User>>();
 	}
 
 	public String getName() {
@@ -78,22 +76,6 @@ public class User {
 			return;
 
 		domainMap.remove(oldFollower.getName());
-	}
-
-	public void addFollowing(User newFollowing) {
-		Map<String, User> domainMap = following.get(newFollowing.getDomain());
-		if (domainMap == null)
-			following.put(newFollowing.getDomain(), domainMap = new HashMap<String, User>());
-
-		domainMap.put(newFollowing.getName(), newFollowing);
-	}
-
-	public void removeFollowing(User oldFollowing) {
-		Map<String, User> domainMap = following.get(oldFollowing.getDomain());
-		if (domainMap == null)
-			return;
-
-		domainMap.remove(oldFollowing.getName());
 	}
 
 	public Map<String, Map<String, User>> getFollowers() {
