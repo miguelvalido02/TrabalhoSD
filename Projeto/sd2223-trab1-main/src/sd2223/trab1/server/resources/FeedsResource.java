@@ -66,73 +66,67 @@ public class FeedsResource implements FeedsService {
         String name = nameDomain[0];
         String domain = nameDomain[1];
         User u = null;
-        URI userURI = null;
         try {
-            userURI = d.knownUrisOf(domain, USERS_SERVICE);
+            URI userURI = d.knownUrisOf(domain, USERS_SERVICE);
+            WebTarget target = client.target(userURI).path(UsersService.PATH);
+            u = reTry(() -> getUser(name, pwd, target, Status.FORBIDDEN));
+            UUID id = UUID.randomUUID();
+            long mid = id.getMostSignificantBits();
+            msg.setId(mid);
+            Map<Long, Message> userFeed = feeds.get(name);
+            if (userFeed == null)
+                userFeed = new ConcurrentHashMap<Long, Message>();
+            userFeed.put(mid, msg);
+            // colocar mensagens nos feeds dos users do mesmo dominio
+            postInDomain(u, msg);
+            // correr todos os seus seguidores e dar post no feed deles
+            sendOutsideDomain(u, msg);
+            return mid;
         } catch (InterruptedException e) {
         }
-        WebTarget target = client.target(userURI).path(UsersService.PATH);
-
-        // reTry()
-        u = reTry(() -> getUser(name, pwd, target, Status.FORBIDDEN));
-
-        UUID id = UUID.randomUUID();
-        long mid = id.getMostSignificantBits();
-        msg.setId(mid);
-        Map<Long, Message> userFeed = feeds.get(name);
-        if (userFeed == null)
-            userFeed = new ConcurrentHashMap<Long, Message>();
-        userFeed.put(mid, msg);
-        // colocar mensagens nos feeds dos users do mesmo dominio
-        postInDomain(u, msg);
-        // correr todos os seus seguidores e dar post no feed deles
-        sendOutsideDomain(u, msg);
-
-        return mid;
+        return -1;
     }
 
     private void sendOutsideDomain(User u, Message msg) {
         Discovery d = Discovery.getInstance();
         // Para cada dominio dos followers enviar um pedido de postOutside
-        Iterator<String> it = u.getFollowers().keySet().iterator();
-        while (it.hasNext()) {
-            String domain = it.next();
+        for (String domain : u.getFollowers().keySet()) {
+            if (domain.equals(u.getDomain()))
+                continue;
             Object[] data = new Object[] { u, msg };
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    reTry(() -> {
-                        requestPostOutsideDomain(domain, d, u, msg, data);
-                        return null;
-                    });
-                }
+            Thread thread = new Thread(() -> {
+                reTry(() -> {
+                    requestPostOutsideDomain(domain, d, data);
+                    return null;
+                });
             });
 
             thread.start();
         }
     }
 
-    private void requestPostOutsideDomain(String domain, Discovery d, User u, Message msg, Object[] data) {
+    private void requestPostOutsideDomain(String domain, Discovery d, Object[] data) {
         try {
             URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
             WebTarget target = client.target(userURI).path(FeedsService.PATH).path("post");
-            target.request().post(Entity.entity(data, MediaType.APPLICATION_JSON));
+            target.request().post(Entity.json(data));
 
         } catch (InterruptedException e) {
         }
     }
 
     private void postInDomain(User u, Message msg) {
-        Map<String, Map<String, User>> followers = u.getFollowers();
+        Map<String, Map<String, User>> followers = u.getFollowers(); // domain <nomeUser, User>
         Map<String, User> followersInDomain = followers.get(u.getDomain());
-        Iterator<User> it = followersInDomain.values().iterator();
-        while (it.hasNext()) {
-            User follower = it.next();
-            Map<Long, Message> followerFeed = feeds.get(follower.getName());
-            if (followerFeed == null)
-                followerFeed = new ConcurrentHashMap<Long, Message>();
-            followerFeed.put(msg.getId(), msg);
+        if (followers != null) {
+            for (User follower : followersInDomain.values()) {
+                Map<Long, Message> followerFeed = feeds.get(follower.getName());
+                if (followerFeed == null)
+                    followerFeed = new ConcurrentHashMap<Long, Message>();
+                followerFeed.put(msg.getId(), msg);
+            }
         }
+
     }
 
     @Override
@@ -164,7 +158,7 @@ public class FeedsResource implements FeedsService {
 
     @Override
     public void removeFromPersonalFeed(String user, long mid, String pwd) {
-        throw new UnsupportedOperationException("Unimplemented method 'removeFromPersonalFeed'");
+
     }
 
     @Override

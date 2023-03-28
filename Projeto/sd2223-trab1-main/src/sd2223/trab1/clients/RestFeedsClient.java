@@ -25,13 +25,11 @@ public class RestFeedsClient extends RestClient implements FeedsService {
     }
 
     private long clt_postMessage(String user, String pwd, Message msg) {
-        String[] nameDomain = user.split("@");
-        String name = nameDomain[0];
-        String domain = nameDomain[1];
-        Response r = target.path(name).path(domain)
+        String domain = user.split("@")[1];
+        Response r = target.path(user).path(domain)
                 .queryParam(UsersService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
-                .post(Entity.entity(user, MediaType.APPLICATION_JSON));
+                .post(Entity.entity(msg, MediaType.APPLICATION_JSON));
 
         if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
             System.out.println("Success");
@@ -43,6 +41,9 @@ public class RestFeedsClient extends RestClient implements FeedsService {
     }
 
     private void clt_removeFromPersonalFeed(String user, long mid, String pwd) {
+        String[] nameDomain = user.split("@");
+        String name = nameDomain[0];
+        String domain = nameDomain[1];
 
         Response r = target.request()
                 .accept(MediaType.APPLICATION_JSON)
@@ -55,26 +56,37 @@ public class RestFeedsClient extends RestClient implements FeedsService {
 
     }
 
+    /**
+     * Obtains the message with id from the feed of user (may be a remote user)
+     * 
+     * @param user user feed being accessed (format user@domain)
+     * @param mid  id of the message
+     *
+     * @return 200 the message if it exists;
+     *         404 if the user or the message does not exists
+     * 
+     * @GET
+     *      @Path("/{" + USER + "}/{" + MID + "}")
+     * @Produces(MediaType.APPLICATION_JSON)
+     *                                       Message getMessage(@PathParam(USER)
+     *                                       String user, @PathParam(MID) long mid);
+     */
+
     private Message clt_getMessage(String user, long mid) {
-        User u = null;
-        Response r = target.path(name)
-                .queryParam(UsersService.PWD, pwd).request()
+        Response r = target.path(user).path(Long.toString(mid)).request()
                 .accept(MediaType.APPLICATION_JSON)
-                .put(Entity.entity(user, MediaType.APPLICATION_JSON));
+                .get();
 
         if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
             System.out.println("Success:");
-            u = r.readEntity(User.class);
-            System.out.println("User updated: " + u);
+            return r.readEntity(Message.class);
         } else
             System.out.println("Error, HTTP error status: " + r.getStatus());
 
-        return u;
+        return null;
 
     }
 
-    // List<Message> getMessages(@PathParam(USER) String user, @QueryParam(TIME)
-    // long time);
     private List<Message> clt_getMessages(String user, long time) {
         User u = null;
         Response r = target.path(name)
