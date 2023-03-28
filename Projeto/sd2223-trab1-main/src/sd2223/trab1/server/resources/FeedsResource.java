@@ -50,41 +50,45 @@ public class FeedsResource implements FeedsService {
 
     public FeedsResource() {
         config = new ClientConfig();
-
         config.property(ClientProperties.READ_TIMEOUT, 5000);
         config.property(ClientProperties.CONNECT_TIMEOUT, 5000);
-
         client = ClientBuilder.newClient(config);
-
         this.feeds = new ConcurrentHashMap<String, Map<Long, Message>>();
     }
 
     @Override
     public long postMessage(String user, String pwd, Message msg) {
-        Discovery d = Discovery.getInstance();
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
         User u = null;
+
+        u = verifyUser(name, domain, pwd, Status.FORBIDDEN);
+        UUID id = UUID.randomUUID();
+        long mid = id.getMostSignificantBits();
+        msg.setId(mid);
+        Map<Long, Message> userFeed = feeds.get(name);
+        if (userFeed == null)
+            userFeed = new ConcurrentHashMap<Long, Message>();
+        userFeed.put(mid, msg);
+        // colocar mensagens nos feeds dos users do mesmo dominio
+        postInDomain(u, msg);
+        // correr todos os seus seguidores e dar post no feed deles
+        sendOutsideDomain(u, msg);
+        return mid;
+
+    }
+
+    private User verifyUser(String name, String domain, String pwd, Status status) {
         try {
+            Discovery d = Discovery.getInstance();
             URI userURI = d.knownUrisOf(domain, USERS_SERVICE);
             WebTarget target = client.target(userURI).path(UsersService.PATH);
-            u = reTry(() -> getUser(name, pwd, target, Status.FORBIDDEN));
-            UUID id = UUID.randomUUID();
-            long mid = id.getMostSignificantBits();
-            msg.setId(mid);
-            Map<Long, Message> userFeed = feeds.get(name);
-            if (userFeed == null)
-                userFeed = new ConcurrentHashMap<Long, Message>();
-            userFeed.put(mid, msg);
-            // colocar mensagens nos feeds dos users do mesmo dominio
-            postInDomain(u, msg);
-            // correr todos os seus seguidores e dar post no feed deles
-            sendOutsideDomain(u, msg);
-            return mid;
+            return reTry(() -> getUser(name, pwd, target, status));
         } catch (InterruptedException e) {
+
         }
-        return -1;
+        return null;
     }
 
     private void sendOutsideDomain(User u, Message msg) {
@@ -173,7 +177,32 @@ public class FeedsResource implements FeedsService {
 
     @Override
     public void subUser(String user, String userSub, String pwd) {
-        throw new UnsupportedOperationException("Unimplemented method 'subUser'");
+        String[] nameDomain = user.split("@");
+        String name = nameDomain[0];
+        String domain = nameDomain[1];
+
+        String[] nameDomainSub = userSub.split("@");
+        String nameSub = nameDomainSub[0];
+        String domainSub = nameDomainSub[1];
+
+        User subU = verifyUser(name, domain, pwd, Status.NOT_FOUND); // TODO
+        User u = verifyUser(name, domain, pwd, Status.FORBIDDEN);
+
+        if (subU.getDomain().equals(Domain.getDomain())) {
+
+        } else {
+            try {
+                Discovery d = Discovery.getInstance();
+                URI userURI = d.knownUrisOf(domainSub, FEEDS_SERVICE);
+                WebTarget target = client.target(userURI).path(FeedsService.PATH);
+                target.path("sub").path(user).path(userSub)
+                        .queryParam(UsersService.PWD, pwd).request()
+                        .accept(MediaType.APPLICATION_JSON).post(Entity.json(null));
+            } catch (InterruptedException e) {
+            }
+
+        }
+
     }
 
     @Override

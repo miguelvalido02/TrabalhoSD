@@ -29,7 +29,7 @@ public class RestFeedsClient extends RestClient implements FeedsService {
         Response r = target.path(user).path(domain)
                 .queryParam(UsersService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
-                .post(Entity.entity(msg, MediaType.APPLICATION_JSON));
+                .post(Entity.json(msg));
 
         if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
             System.out.println("Success");
@@ -55,22 +55,6 @@ public class RestFeedsClient extends RestClient implements FeedsService {
             System.out.println("Error, HTTP error status: " + r.getStatus());
 
     }
-
-    /**
-     * Obtains the message with id from the feed of user (may be a remote user)
-     * 
-     * @param user user feed being accessed (format user@domain)
-     * @param mid  id of the message
-     *
-     * @return 200 the message if it exists;
-     *         404 if the user or the message does not exists
-     * 
-     * @GET
-     *      @Path("/{" + USER + "}/{" + MID + "}")
-     * @Produces(MediaType.APPLICATION_JSON)
-     *                                       Message getMessage(@PathParam(USER)
-     *                                       String user, @PathParam(MID) long mid);
-     */
 
     private Message clt_getMessage(String user, long mid) {
         Response r = target.path(user).path(Long.toString(mid)).request()
@@ -104,21 +88,31 @@ public class RestFeedsClient extends RestClient implements FeedsService {
 
     }
 
+    /**
+     * Subscribe a user.
+     * A user must contact the server of her domain directly (i.e., this operation
+     * should not be
+     * propagated to other domain)
+     *
+     * @param user    the user subscribing (following) other user (format
+     *                user@domain)
+     * @param userSub the user to be subscribed (followed) (format user@domain)
+     * @param pwd     password of the user to subscribe
+     * @return 204 if ok
+     *         404 is generated if the user to be subscribed does not exist
+     *         403 is generated if the user does not exist or if the pwd is not
+     *         correct
+     */
+
     private void clt_subUser(String user, String userSub, String pwd) {
-        List<User> users = null;
-        Response r = target.path("/").queryParam(UsersService.QUERY, pattern).request()
-                .accept(MediaType.APPLICATION_JSON)
-                .get();
+        Response r = target.path("sub").path(user).path(userSub)
+                .queryParam(UsersService.PWD, pwd).request()
+                .accept(MediaType.APPLICATION_JSON).post(Entity.json(null));
 
-        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
-            users = r.readEntity(new GenericType<List<User>>() {
-            });
-            System.out.println("Success: (" + users.size() + " users)");
-            users.stream().forEach(u -> System.out.println(u));
-        } else
+        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
+            System.out.println("Success subUser");
+        else
             System.out.println("Error, HTTP error status: " + r.getStatus());
-
-        return users;
     }
 
     private void clt_unsubscribeUser(String user, String userSub, String pwd) {
