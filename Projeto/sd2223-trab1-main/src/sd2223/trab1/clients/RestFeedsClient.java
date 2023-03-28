@@ -28,9 +28,6 @@ public class RestFeedsClient extends RestClient implements FeedsService {
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
-        UUID id = UUID.randomUUID();
-        long mid = id.getMostSignificantBits();
-        msg.setId(mid);
         Response r = target.path(name).path(domain)
                 .queryParam(UsersService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
@@ -38,12 +35,11 @@ public class RestFeedsClient extends RestClient implements FeedsService {
 
         if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
             System.out.println("Success:");
-            mid = r.readEntity(Long.class);
-            System.out.println("Message id: " + mid);
+            return r.readEntity(Long.class);
         } else
             System.out.println("Error, HTTP error status: " + r.getStatus());
 
-        return mid;
+        return -1;
     }
 
     private void clt_removeFromPersonalFeed(String user, long mid, String pwd) {

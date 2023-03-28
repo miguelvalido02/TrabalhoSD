@@ -21,9 +21,9 @@ public class DeleteUserClient {
 
 		System.out.println("Sending request to server.");
 
-		String serverUrl = Discovery.getInstance().knownUrisOf(domain, SERVICE, 1)[0].toString();
+		URI serverUrl = Discovery.getInstance().knownUrisOf(domain, SERVICE);
 
-		var result = new RestUsersClient(URI.create(serverUrl)).deleteUser(name, pwd);
+		var result = new RestUsersClient(serverUrl).deleteUser(name, pwd);
 		System.out.println("Result: " + result);
 
 		/*

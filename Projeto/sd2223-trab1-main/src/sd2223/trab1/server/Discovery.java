@@ -40,13 +40,10 @@ public interface Discovery {
 	 * Get discovered URIs for a given service name
 	 * 
 	 * @param serviceName - name of the service
-	 * @param minReplies  - minimum number of requested URIs. Blocks until
-	 *                    the
-	 *                    number is satisfied.
 	 * @return array with the discovered URIs for the given service name.
 	 * @throws InterruptedException
 	 */
-	public URI[] knownUrisOf(String domain, String serviceName, int minReplies)
+	public URI knownUrisOf(String domain, String serviceName)
 			throws InterruptedException;
 
 	/**
@@ -121,16 +118,16 @@ class DiscoveryImpl implements Discovery {
 	}
 
 	@Override
-	public URI[] knownUrisOf(String domain, String serviceName, int minEntries)
+	public URI knownUrisOf(String domain, String serviceName)
 			throws InterruptedException {
 		String domain_serviceName = String.format("%s:%s", domain, serviceName);
 		Cache<String, URI> cache = urisMap.get(domain_serviceName);
-		while (cache == null || cache.size() < minEntries) {
+		while (cache == null || cache.size() < 1) {
 			Thread.sleep(DISCOVERY_ANNOUNCE_PERIOD);
 			cache = urisMap.get(domain_serviceName);
 		}
 		Collection<URI> colUris = cache.asMap().values();
-		return Arrays.copyOf(colUris.toArray(), colUris.size(), URI[].class);
+		return Arrays.copyOf(colUris.toArray(), colUris.size(), URI[].class)[0];
 
 	}
 

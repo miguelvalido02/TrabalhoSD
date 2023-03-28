@@ -27,9 +27,9 @@ public class UpdateUserClient {
 
 		System.out.println("Sending request to server.");
 
-		String serverUrl = Discovery.getInstance().knownUrisOf(domain, SERVICE, 1)[0].toString();
+		URI serverUrl = Discovery.getInstance().knownUrisOf(domain, SERVICE);
 
-		var result = new RestUsersClient(URI.create(serverUrl)).updateUser(name, oldpwd, u);
+		var result = new RestUsersClient(serverUrl).updateUser(name, oldpwd, u);
 		System.out.println("Result: " + result);
 
 		/*

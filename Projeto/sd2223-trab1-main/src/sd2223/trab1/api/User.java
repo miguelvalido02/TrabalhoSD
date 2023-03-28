@@ -95,6 +95,10 @@ public class User {
 		domainMap.remove(oldFollowing.getName());
 	}
 
+	public Map<String, Map<String, User>> getFollowers() {
+		return followers;
+	}
+
 	@Override
 	public String toString() {
 		return "User [name=" + name + ", pwd=" + pwd + ", displayName=" + displayName + ", domain=" + domain + "]";

@@ -4,7 +4,6 @@ import java.net.URI;
 import java.io.IOException;
 
 import sd2223.trab1.api.Message;
-import sd2223.trab1.api.User;
 import sd2223.trab1.server.Discovery;
 
 import java.util.logging.Logger;
@@ -38,9 +37,9 @@ public class PostMessageClient {
         var m = new Message(0, name, pwd, textM);
 
         Log.info("Sending request to server.");
-        String serverUrl = Discovery.getInstance().knownUrisOf(domain, SERVICE, 1)[0].toString();
+        URI serverUrl = Discovery.getInstance().knownUrisOf(domain, SERVICE);
 
-        var result = new RestFeedsClient(URI.create(serverUrl)).postMessage(nameAndDomain, pwd, m);
+        var result = new RestFeedsClient(serverUrl).postMessage(nameAndDomain, pwd, m);
         System.out.println("Result: " + result);
 
     }
