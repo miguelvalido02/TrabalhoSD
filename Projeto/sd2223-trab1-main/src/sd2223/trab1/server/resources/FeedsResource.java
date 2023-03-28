@@ -42,6 +42,8 @@ public class FeedsResource implements FeedsService {
     private static final int RETRY_SLEEP = 3000;
     private static final int MAX_RETRIES = 10;
 
+    private static final String FEEDS_SERVICE = "feeds";
+
     private Map<String, Map<Long, Message>> feeds;// <username,<mid,message>>
     private ClientConfig config;
     private Client client;
@@ -79,7 +81,11 @@ public class FeedsResource implements FeedsService {
         msg.setId(mid);
         Map<Long, Message> userFeed = feeds.get(name);
         if (userFeed == null)
-            userFeed = new ConcurrentHashMap<Long, Message>();
+            userFeed = new ConcurrentHashMap<Long, Message>();// TODO mandar uma de engenheiro->meter todos os users na
+                                                              // lista dos seus proprios followers, pois assim
+                                                              // eliminamos a necessidade de ter o metodo postInDomain e
+                                                              // eliminamos a necessidade de meter a message no feed do
+                                                              // user pois o sendOutsideDomain tratara de tudo
         userFeed.put(mid, msg);
         // colocar mensagens nos feeds dos users do mesmo dominio
         postInDomain(u, msg);
@@ -97,8 +103,11 @@ public class FeedsResource implements FeedsService {
         while (it.hasNext()) {
             String domain = it.next();
             try {
-                URI userURI = d.knownUrisOf(domain, USERS_SERVICE);
+                URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
                 WebTarget target = client.target(userURI).path(FeedsService.PATH).path("post").path(domain);
+                Response r = target.request()
+                        .accept(MediaType.APPLICATION_JSON)
+                        .post(Entity.entity(u, MediaType.APPLICATION_JSON));
 
             } catch (InterruptedException e) {
             }
