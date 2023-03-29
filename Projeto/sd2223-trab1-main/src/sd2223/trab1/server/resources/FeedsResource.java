@@ -162,6 +162,17 @@ public class FeedsResource implements FeedsService {
 
     @Override
     public void removeFromPersonalFeed(String user, long mid, String pwd) {
+        String[] nameDomain = user.split("@");
+        String name = nameDomain[0];
+        String domain = nameDomain[1];
+        verifyUser(name, domain, pwd, Status.FORBIDDEN);
+        Map<Long, Message> feed = feeds.get(name);
+        if (feed == null)
+            throw new WebApplicationException(Status.NOT_FOUND);
+        Message m = feed.get(mid);
+        if (m == null)
+            throw new WebApplicationException(Status.NOT_FOUND);
+        feed.remove(mid);
 
     }
 
@@ -185,11 +196,21 @@ public class FeedsResource implements FeedsService {
         String nameSub = nameDomainSub[0];
         String domainSub = nameDomainSub[1];
 
-        User subU = verifyUser(name, domain, pwd, Status.NOT_FOUND); // TODO
+        // User subU = verifyUser(nameSub, domainSub, pwd, Status.NOT_FOUND); // TODO
+        try {
+            Discovery d = Discovery.getInstance();
+            URI userURI = d.knownUrisOf(domainSub, USERS_SERVICE);
+            WebTarget target = client.target(userURI).path(UsersService.PATH);
+            Response r = target.path("find").path(nameSub).request().get();
+            if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
+                throw new WebApplicationException(Status.NOT_FOUND);// 404 userSub does not exist
+        } catch (InterruptedException e) {
+        }
+
         User u = verifyUser(name, domain, pwd, Status.FORBIDDEN);
 
-        if (subU.getDomain().equals(Domain.getDomain())) {
-
+        if (domainSub.equals(Domain.getDomain())) {
+            u.addFollower();
         } else {
             try {
                 Discovery d = Discovery.getInstance();

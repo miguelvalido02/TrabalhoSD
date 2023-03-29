@@ -70,6 +70,14 @@ public class UsersResource implements UsersService {
 	}
 
 	@Override
+	public boolean userExists(String name) {
+		User u = users.get(name);
+		if (u == null)
+			throw new WebApplicationException(Status.NOT_FOUND);
+		return true;
+	}
+
+	@Override
 	public User updateUser(String name, String oldPwd, User user) {
 		Log.info("updateUser : name = " + name + "; pwd = " + oldPwd + " ; user = " + user);
 		var u = checkUser(name, oldPwd);

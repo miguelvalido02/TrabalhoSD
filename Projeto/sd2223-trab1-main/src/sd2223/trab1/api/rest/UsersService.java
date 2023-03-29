@@ -100,4 +100,8 @@ public interface UsersService {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	List<User> searchUsers(@QueryParam(QUERY) String pattern);
+
+	@GET
+	@Path("/find/{" + NAME + "}")
+	void userExists(@PathParam(NAME) String name);
 }

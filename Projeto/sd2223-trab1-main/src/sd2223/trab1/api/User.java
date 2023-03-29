@@ -1,7 +1,9 @@
 package sd2223.trab1.api;
 
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Represents a user in the system. Note: the password of a user should not be
@@ -13,8 +15,7 @@ public class User {
 	private String displayName;
 	private String domain;
 	// HashSet<userName> followers;
-	private Map<String, Map<String, User>> followers;// <domain,<name,user>> TODO nao devia ser so
-														// <domain,List<name>>????
+	private Map<String, List<String>> followers;// <domain,List<name@domain>>
 
 	public User() {
 		this.pwd = null;
@@ -28,7 +29,7 @@ public class User {
 		this.name = name;
 		this.domain = domain;
 		this.displayName = displayName;
-		followers = new HashMap<String, Map<String, User>>();
+		followers = new HashMap<String, List<String>>();
 	}
 
 	public String getName() {
@@ -63,23 +64,27 @@ public class User {
 		this.domain = domain;
 	}
 
-	public void addFollower(User newFollower) {
-		Map<String, User> domainMap = followers.get(newFollower.getDomain());
-		if (domainMap == null)
-			followers.put(newFollower.getDomain(), domainMap = new HashMap<String, User>());
+	public void addFollower(String userDomain) {
+		String followerDomain = userDomain.split("@")[1];
+		List<String> domainList = followers.get(followerDomain);
+		if (domainList == null)
+			followers.put(followerDomain, domainList = new ArrayList<String>());
 
-		domainMap.put(newFollower.getName(), newFollower);
+		domainList.add(userDomain);
 	}
 
-	public void removeFollower(User oldFollower) {
-		Map<String, User> domainMap = followers.get(oldFollower.getDomain());
-		if (domainMap == null)
+	public void removeFollower(String userDomain) {
+		String[] nameDomain = userDomain.split("@");
+		String followerName = nameDomain[0];
+		String followerDomain = nameDomain[1];
+		List<String> domainList = followers.get(followerDomain);
+		if (domainList == null)
 			return;
 
-		domainMap.remove(oldFollower.getName());
+		domainList.remove(followerName);
 	}
 
-	public Map<String, Map<String, User>> getFollowers() {
+	public Map<String, List<String>> getFollowers() {
 		return followers;
 	}
 

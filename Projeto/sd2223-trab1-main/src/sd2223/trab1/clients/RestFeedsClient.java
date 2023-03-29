@@ -41,13 +41,7 @@ public class RestFeedsClient extends RestClient implements FeedsService {
     }
 
     private void clt_removeFromPersonalFeed(String user, long mid, String pwd) {
-        String[] nameDomain = user.split("@");
-        String name = nameDomain[0];
-        String domain = nameDomain[1];
-
-        Response r = target.request()
-                .accept(MediaType.APPLICATION_JSON)
-                .post(Entity.entity(user, MediaType.APPLICATION_JSON));
+        Response r = target.path(user).path(Long.toString(mid)).queryParam(UsersService.PWD, pwd).request().delete();
 
         if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
             r.readEntity(String.class);
