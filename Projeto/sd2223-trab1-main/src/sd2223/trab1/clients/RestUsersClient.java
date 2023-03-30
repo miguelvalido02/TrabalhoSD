@@ -27,7 +27,7 @@ public class RestUsersClient extends RestClient implements UsersService {
 
         Response r = target.request()
                 .accept(MediaType.APPLICATION_JSON)
-                .post(Entity.entity(user, MediaType.APPLICATION_JSON));
+                .post(Entity.json(user));
 
         if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
             return r.readEntity(String.class);
@@ -129,5 +129,17 @@ public class RestUsersClient extends RestClient implements UsersService {
     @Override
     public List<User> searchUsers(String pattern) {
         return super.reTry(() -> clt_searchUsers(pattern));
+    }
+
+    @Override
+    public void userExists(String name) {
+    }
+
+    @Override
+    public void addSub(String user, String subUser) {
+    }
+
+    @Override
+    public void removeSub(String user, String subUser) {
     }
 }

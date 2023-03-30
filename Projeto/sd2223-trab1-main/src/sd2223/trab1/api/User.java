@@ -2,6 +2,7 @@ package sd2223.trab1.api;
 
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -16,6 +17,7 @@ public class User {
 	private String domain;
 	// HashSet<userName> followers;
 	private Map<String, List<String>> followers;// <domain,List<name@domain>>
+	private Map<String, String> following;// <name@domain,name@domain>
 
 	public User() {
 		this.pwd = null;
@@ -30,6 +32,7 @@ public class User {
 		this.domain = domain;
 		this.displayName = displayName;
 		followers = new HashMap<String, List<String>>();
+		following = new HashMap<String, String>();
 	}
 
 	public String getName() {
@@ -86,6 +89,18 @@ public class User {
 
 	public Map<String, List<String>> getFollowers() {
 		return followers;
+	}
+
+	public void addFollowing(String userDomain) {
+		following.put(userDomain, userDomain);
+	}
+
+	public void removeFollowing(String userDomain) {
+		following.remove(userDomain);
+	}
+
+	public List<String> getFollowing() {
+		return new ArrayList<String>(following.values());
 	}
 
 	@Override

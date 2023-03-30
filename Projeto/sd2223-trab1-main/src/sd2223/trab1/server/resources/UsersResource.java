@@ -27,7 +27,7 @@ public class UsersResource implements UsersService {
 		Log.info("createUser : " + user);
 
 		// Check if user data is valid
-		if (user.getDisplayName() == null || user.getPwd() == null || user.getName() == null ||
+		if (user == null || user.getDisplayName() == null || user.getPwd() == null || user.getName() == null ||
 				user.getDomain() == null) {
 			Log.info("User object invalid.");
 			throw new WebApplicationException(Status.BAD_REQUEST);
@@ -70,11 +70,10 @@ public class UsersResource implements UsersService {
 	}
 
 	@Override
-	public boolean userExists(String name) {
+	public void userExists(String name) {
 		User u = users.get(name);
 		if (u == null)
 			throw new WebApplicationException(Status.NOT_FOUND);
-		return true;
 	}
 
 	@Override
@@ -106,6 +105,21 @@ public class UsersResource implements UsersService {
 				l.add(new User(user.getName(), "", user.getDomain(), user.getDisplayName()));
 		}
 		return l;
+	}
+
+	@Override
+	public void addSub(String user, String subUser) {
+		String nameSub = subUser.split("@")[0];
+		users.get(nameSub).addFollower(user);
+
+	}
+
+	@Override
+	public void removeSub(String user, String subUser) {
+		String nameSub = subUser.split("@")[0];
+		if (!users.get(nameSub).getFollowers().containsKey(user))
+			throw new WebApplicationException(Status.NOT_FOUND);
+		users.get(nameSub).removeFollower(user);
 	}
 
 }

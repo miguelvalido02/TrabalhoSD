@@ -120,14 +120,18 @@ public class FeedsResource implements FeedsService {
     }
 
     private void postInDomain(User u, Message msg) {
-        Map<String, Map<String, User>> followers = u.getFollowers(); // domain <nomeUser, User>
-        Map<String, User> followersInDomain = followers.get(u.getDomain());
+        Map<String, List<String>> followers = u.getFollowers(); // domain <nomeUser, User>
         if (followers != null) {
-            for (User follower : followersInDomain.values()) {
-                Map<Long, Message> followerFeed = feeds.get(follower.getName());
-                if (followerFeed == null)
+            List<String> followersInDomain = followers.get(Domain.getDomain());
+            for (String follower : followersInDomain) {
+                String name = follower.split("@")[0];
+                Map<Long, Message> followerFeed = feeds.get(name);
+                if (followerFeed == null) {
                     followerFeed = new ConcurrentHashMap<Long, Message>();
+                    feeds.put(name, followerFeed);
+                }
                 followerFeed.put(msg.getId(), msg);
+
             }
         }
 
@@ -137,10 +141,11 @@ public class FeedsResource implements FeedsService {
     public void postOutside(Object[] data) {
         User user = (User) data[0];
         Message msg = (Message) data[1];
-        for (User follower : user.getFollowers().get(Domain.getDomain()).values()) {
-            Map<Long, Message> feed = feeds.get(follower.getName());
+        for (String follower : user.getFollowers().get(Domain.getDomain())) {
+            String name = follower.split("@")[0];
+            Map<Long, Message> feed = feeds.get(name);
             if (feed == null)
-                feeds.put(follower.getName(), feed = new ConcurrentHashMap<Long, Message>());
+                feeds.put(name, feed = new ConcurrentHashMap<Long, Message>());
             feed.put(msg.getId(), msg);
         }
     }
@@ -196,39 +201,69 @@ public class FeedsResource implements FeedsService {
         String nameSub = nameDomainSub[0];
         String domainSub = nameDomainSub[1];
 
-        // User subU = verifyUser(nameSub, domainSub, pwd, Status.NOT_FOUND); // TODO
         try {
+            // Garantir que o userSub existe (pedido ao servico users)
             Discovery d = Discovery.getInstance();
             URI userURI = d.knownUrisOf(domainSub, USERS_SERVICE);
             WebTarget target = client.target(userURI).path(UsersService.PATH);
             Response r = target.path("find").path(nameSub).request().get();
             if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
                 throw new WebApplicationException(Status.NOT_FOUND);// 404 userSub does not exist
+
+            // Garantir que o user existe
+            User u = verifyUser(name, domain, pwd, Status.FORBIDDEN);
+            // User subscreve userSub
+            u.addFollowing(userSub);
+            // objeto duplicado
+            target.path(name)
+                    .queryParam(UsersService.PWD, pwd).request()
+                    .accept(MediaType.APPLICATION_JSON)
+                    .put(Entity.entity(u, MediaType.APPLICATION_JSON));
+
+            target.path("sub/add").path(user).path(userSub)
+                    .request().put(Entity.json(null));
+
         } catch (InterruptedException e) {
-        }
-
-        User u = verifyUser(name, domain, pwd, Status.FORBIDDEN);
-
-        if (domainSub.equals(Domain.getDomain())) {
-            u.addFollower();
-        } else {
-            try {
-                Discovery d = Discovery.getInstance();
-                URI userURI = d.knownUrisOf(domainSub, FEEDS_SERVICE);
-                WebTarget target = client.target(userURI).path(FeedsService.PATH);
-                target.path("sub").path(user).path(userSub)
-                        .queryParam(UsersService.PWD, pwd).request()
-                        .accept(MediaType.APPLICATION_JSON).post(Entity.json(null));
-            } catch (InterruptedException e) {
-            }
-
         }
 
     }
 
     @Override
     public void unsubscribeUser(String user, String userSub, String pwd) {
-        throw new UnsupportedOperationException("Unimplemented method 'unsubscribeUser'");
+        String[] nameDomain = user.split("@");
+        String name = nameDomain[0];
+        String domain = nameDomain[1];
+
+        String[] nameDomainSub = userSub.split("@");
+        String nameSub = nameDomainSub[0];
+        String domainSub = nameDomainSub[1];
+
+        try {
+            // Garantir que o user existe
+            User u = verifyUser(name, domain, pwd, Status.FORBIDDEN);
+
+            // Garantir que o userSub existe (pedido ao servico users)
+            Discovery d = Discovery.getInstance();
+            URI userURI = d.knownUrisOf(domainSub, USERS_SERVICE);
+            WebTarget target = client.target(userURI).path(UsersService.PATH);
+            Response r = target.path("find").path(nameSub).request().get();
+            if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
+                throw new WebApplicationException(Status.NOT_FOUND);// 404 userSub does not exist
+
+            // User deixa de subscrever userSub
+            r = target.path("sub/remove").path(user).path(userSub)
+                    .request().put(Entity.json(null));
+            if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
+                throw new WebApplicationException(Status.NOT_FOUND);// 404 if the userSub is not subscribed
+
+            u.removeFollowing(userSub);
+            // objeto duplicado
+            target.path(name)
+                    .queryParam(UsersService.PWD, pwd).request()
+                    .accept(MediaType.APPLICATION_JSON)
+                    .put(Entity.entity(u, MediaType.APPLICATION_JSON));
+        } catch (InterruptedException e) {
+        }
     }
 
     @Override
