@@ -67,19 +67,16 @@ public class FeedsResource implements FeedsService {
         long mid = id.getMostSignificantBits();
         msg.setId(mid);
         msg.setCreationTime(System.currentTimeMillis());
-        /*
-         * Map<Long, Message> userFeed = feeds.get(name);
-         * if (userFeed == null)
-         * feeds.put(name, userFeed = new ConcurrentHashMap<Long, Message>());
-         * userFeed.put(mid, msg);
-         */
+
+        Map<Long, Message> userFeed = feeds.get(name);
+        if (userFeed == null)
+            feeds.put(name, userFeed = new ConcurrentHashMap<Long, Message>());
+        userFeed.put(mid, msg);
+
         // colocar mensagens nos feeds dos users do mesmo dominio
-        System.out.println("Print antes do postindomain");
         postInDomain(u, msg);
         // correr todos os seus seguidores e dar post no feed deles
-        System.out.println("Print antes do send outside");
         sendOutsideDomain(u, msg);
-        System.out.println("Depois de send outside domain");
         return mid;
 
     }
@@ -87,9 +84,6 @@ public class FeedsResource implements FeedsService {
     private void sendOutsideDomain(User u, Message msg) {
         Discovery d = Discovery.getInstance();
         // Para cada dominio dos followers enviar um pedido de postOutside
-        Map<String, List<String>> followers = u.obtainFollowers();
-        System.out.println(followers);
-        System.out.println(followers.keySet());
         for (String domain : u.obtainFollowers().keySet()) {
             if (domain.equals(u.getDomain()))
                 continue;
@@ -168,7 +162,6 @@ public class FeedsResource implements FeedsService {
             if (Domain.getDomain().equals(domain)) {
                 // Verificar que o user existe
                 findUser(domain, name);
-
                 Map<Long, Message> userFeed = feeds.get(name);
                 if (userFeed == null || userFeed.get(mid) == null)
                     throw new WebApplicationException(Status.NOT_FOUND);// 404 message does not exist
