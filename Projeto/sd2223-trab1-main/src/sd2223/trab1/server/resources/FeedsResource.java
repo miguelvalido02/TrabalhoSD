@@ -229,11 +229,11 @@ public class FeedsResource implements FeedsService {
             User u = verifyUser(name, domain, pwd);
 
             // User subscreve userSub
-            sub.addFollower(user);
-            updateUser(domainSub, nameSub, sub);
-
             u.addFollowing(userSub);
             updateUser(domain, name, u);
+
+            sub.addFollower(user);
+            updateUser(domainSub, nameSub, sub);
 
         } catch (InterruptedException e) {
         }
@@ -297,10 +297,6 @@ public class FeedsResource implements FeedsService {
                 System.err.println(x.getMessage());
                 Log.fine("ProcessingException: " + x.getMessage());
                 sleep(RETRY_SLEEP);
-            } catch (Exception x) {
-                Log.fine("Exception: " + x.getMessage());
-                x.printStackTrace();
-                break;
             }
         return null;
     }
@@ -349,9 +345,9 @@ public class FeedsResource implements FeedsService {
                 .queryParam(UsersService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
+
         if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
             return r.readEntity(User.class);// 200 OK
-
         else if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
             throw new WebApplicationException(Status.NOT_FOUND);
         else if (r.getStatus() == Status.FORBIDDEN.getStatusCode())

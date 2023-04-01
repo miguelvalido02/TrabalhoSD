@@ -17,7 +17,7 @@ public class User {
 	private String displayName;
 	private String domain;
 	private Map<String, List<String>> followers;// <domain,List<name@domain>>
-	private Set<String> following;// <name@domain,name@domain>
+	private Set<String> following;// <name@domain>
 
 	public User() {
 		this.pwd = null;

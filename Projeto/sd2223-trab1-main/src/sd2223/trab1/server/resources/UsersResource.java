@@ -59,12 +59,23 @@ public class UsersResource implements UsersService {
 	public User updateUser(String name, String oldPwd, User user) {
 		Log.info("updateUser : name = " + name + "; pwd = " + oldPwd + " ; user = " + user);
 		User u = checkUser(name, oldPwd);
+
 		if (u != null) {
 			String pwd = user.getPwd() == null ? oldPwd : user.getPwd();
 			u.setPwd(pwd);
 			String displayName = user.getDisplayName() == null ? u.getDisplayName() : user.getDisplayName();
 			u.setDisplayName(displayName);
+			List<String> following = user.obtainFollowing();
+			if (following != null)
+				for (String follow : following)
+					u.addFollowing(follow);
+			Map<String, List<String>> followers = user.obtainFollowers();
+			if (followers != null)
+				for (String domain : followers.keySet())
+					for (String follower : followers.get(domain))
+						u.addFollower(follower);
 		}
+		users.put(u.getName(), u);
 		return u;
 	}
 

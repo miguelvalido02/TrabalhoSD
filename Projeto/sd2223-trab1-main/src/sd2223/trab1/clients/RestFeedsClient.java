@@ -2,7 +2,6 @@ package sd2223.trab1.clients;
 
 import java.net.URI;
 import java.util.List;
-import java.util.logging.Logger;
 
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.rest.FeedsService;
