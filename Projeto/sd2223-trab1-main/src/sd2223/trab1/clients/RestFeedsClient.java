@@ -2,17 +2,16 @@ package sd2223.trab1.clients;
 
 import java.net.URI;
 import java.util.List;
-import java.util.UUID;
 
-import sd2223.trab1.api.Message;
 import sd2223.trab1.api.User;
+import sd2223.trab1.api.Message;
 import sd2223.trab1.api.rest.FeedsService;
-import sd2223.trab1.api.rest.UsersService;
+
 import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.GenericType;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.GenericType;
+import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.Response.Status;
 
 public class RestFeedsClient extends RestClient implements FeedsService {
