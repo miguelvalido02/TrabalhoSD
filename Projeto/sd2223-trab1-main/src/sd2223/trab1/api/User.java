@@ -1,9 +1,10 @@
 package sd2223.trab1.api;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -15,9 +16,8 @@ public class User {
 	private String pwd;
 	private String displayName;
 	private String domain;
-	// HashSet<userName> followers;
 	private Map<String, List<String>> followers;// <domain,List<name@domain>>
-	private Map<String, String> following;// <name@domain,name@domain>
+	private Set<String> following;// <name@domain,name@domain>
 
 	public User() {
 		this.pwd = null;
@@ -32,7 +32,7 @@ public class User {
 		this.domain = domain;
 		this.displayName = displayName;
 		followers = new HashMap<String, List<String>>();
-		following = new HashMap<String, String>();
+		following = new HashSet<String>();
 	}
 
 	public String getName() {
@@ -92,7 +92,7 @@ public class User {
 	}
 
 	public void addFollowing(String userDomain) {
-		following.put(userDomain, userDomain);
+		following.add(userDomain);
 	}
 
 	public void removeFollowing(String userDomain) {
@@ -100,7 +100,7 @@ public class User {
 	}
 
 	public List<String> getFollowing() {
-		return new ArrayList<String>(following.values());
+		return new ArrayList<String>(following);
 	}
 
 	@Override

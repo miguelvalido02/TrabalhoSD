@@ -21,13 +21,13 @@ public class RestFeedsClient extends RestClient implements FeedsService {
 
     RestFeedsClient(URI serverURI) {
         super(serverURI);
-        target = client.target(serverURI).path(UsersService.PATH);
+        target = client.target(serverURI).path(FeedsService.PATH);
     }
 
     private long clt_postMessage(String user, String pwd, Message msg) {
         String domain = user.split("@")[1];
         Response r = target.path(user).path(domain)
-                .queryParam(UsersService.PWD, pwd).request()
+                .queryParam(FeedsService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .post(Entity.json(msg));
 
@@ -41,10 +41,11 @@ public class RestFeedsClient extends RestClient implements FeedsService {
     }
 
     private void clt_removeFromPersonalFeed(String user, long mid, String pwd) {
-        Response r = target.path(user).path(Long.toString(mid)).queryParam(UsersService.PWD, pwd).request().delete();
+        Response r = target.path(user).path(Long.toString(mid)).queryParam(FeedsService.PWD, pwd).request().delete();
 
-        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
-            r.readEntity(String.class);
+        if (r.getStatus() == Status.OK.getStatusCode())
+            System.out.println("Success removing from personal feed");
+
         else
             System.out.println("Error, HTTP error status: " + r.getStatus());
 
@@ -66,74 +67,54 @@ public class RestFeedsClient extends RestClient implements FeedsService {
     }
 
     private List<Message> clt_getMessages(String user, long time) {
-        User u = null;
-        Response r = target.path(name)
-                .queryParam(UsersService.PWD, pwd).request()
-                .accept(MediaType.APPLICATION_JSON).delete();
+        List<Message> messages = null;
+        Response r = target.path(user)
+                .queryParam(FeedsService.TIME, time).request()
+                .accept(MediaType.APPLICATION_JSON).get();
 
         if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
-            System.out.println("Success:");
-            u = r.readEntity(User.class);
-            System.out.println("User Deleted: " + u);
+            messages = r.readEntity(new GenericType<List<Message>>() {
+            });
+            System.out.println("Success: (" + messages.size() + " users)");
+            messages.stream().forEach(m -> System.out.println(m));
         } else
             System.out.println("Error, HTTP error status: " + r.getStatus());
 
-        return u;
+        return messages;
 
     }
 
-    /**
-     * Subscribe a user.
-     * A user must contact the server of her domain directly (i.e., this operation
-     * should not be
-     * propagated to other domain)
-     *
-     * @param user    the user subscribing (following) other user (format
-     *                user@domain)
-     * @param userSub the user to be subscribed (followed) (format user@domain)
-     * @param pwd     password of the user to subscribe
-     * @return 204 if ok
-     *         404 is generated if the user to be subscribed does not exist
-     *         403 is generated if the user does not exist or if the pwd is not
-     *         correct
-     */
-
     private void clt_subUser(String user, String userSub, String pwd) {
         Response r = target.path("sub").path(user).path(userSub)
-                .queryParam(UsersService.PWD, pwd).request()
+                .queryParam(FeedsService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON).post(Entity.json(null));
 
-        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
+        if (r.getStatus() == Status.OK.getStatusCode())// produz?
             System.out.println("Success subUser");
         else
             System.out.println("Error, HTTP error status: " + r.getStatus());
     }
 
     private void clt_unsubscribeUser(String user, String userSub, String pwd) {
-        List<User> users = null;
-        Response r = target.path("/").queryParam(UsersService.QUERY, pattern).request()
+        Response r = target.path("sub").path(user).path(userSub)
+                .queryParam(FeedsService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
-                .get();
+                .delete();
 
-        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
-            users = r.readEntity(new GenericType<List<User>>() {
-            });
-            System.out.println("Success: (" + users.size() + " users)");
-            users.stream().forEach(u -> System.out.println(u));
-        } else
+        if (r.getStatus() == Status.OK.getStatusCode()) // produz?
+            System.out.println("Success unsubscribeUser");
+        else
             System.out.println("Error, HTTP error status: " + r.getStatus());
-
-        return users;
     }
 
     private List<String> clt_listSubs(String user) {
-        List<User> users = null;
-        Response r = target.path("/").queryParam(UsersService.QUERY, pattern).request()
+        List<String> users = null;
+        Response r = target.path("sub").path("list").path(user).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
 
         if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
-            users = r.readEntity(new GenericType<List<User>>() {
+            users = r.readEntity(new GenericType<List<String>>() {
             });
             System.out.println("Success: (" + users.size() + " users)");
             users.stream().forEach(u -> System.out.println(u));

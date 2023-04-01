@@ -34,7 +34,7 @@ public class PostMessageClient {
         String pwd = args[1];
         String textM = args[2];
 
-        var m = new Message(0, name, pwd, textM);
+        var m = new Message(0, name, domain, textM);
 
         Log.info("Sending request to server.");
         URI serverUrl = Discovery.getInstance().knownUrisOf(domain, SERVICE);

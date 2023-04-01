@@ -103,7 +103,8 @@ public interface UsersService {
 
 	@GET
 	@Path("/find/{" + NAME + "}")
-	void userExists(@PathParam(NAME) String name);
+	@Produces(MediaType.APPLICATION_JSON)
+	User userExists(@PathParam(NAME) String name);
 
 	@PUT
 	@Path("/sub/add/{" + NAME + "}/{sub}")

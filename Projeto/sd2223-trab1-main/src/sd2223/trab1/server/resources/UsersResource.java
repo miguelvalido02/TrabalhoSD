@@ -70,10 +70,11 @@ public class UsersResource implements UsersService {
 	}
 
 	@Override
-	public void userExists(String name) {
+	public User userExists(String name) {
 		User u = users.get(name);
 		if (u == null)
 			throw new WebApplicationException(Status.NOT_FOUND);
+		return u;
 	}
 
 	@Override
@@ -90,7 +91,7 @@ public class UsersResource implements UsersService {
 	}
 
 	@Override
-	public User deleteUser(String name, String pwd) {
+	public User deleteUser(String name, String pwd) {// TODO delete do feeds
 		Log.info("deleteUser : user = " + name + "; pwd = " + pwd);
 		checkUser(name, pwd);
 		return users.remove(name);
