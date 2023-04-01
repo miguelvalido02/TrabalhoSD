@@ -106,13 +106,4 @@ public interface UsersService {
 	@Path("/find/{" + NAME + "}")
 	@Produces(MediaType.APPLICATION_JSON)
 	User userExists(@PathParam(NAME) String name);
-
-	@PUT
-	@Path("/sub/add/{" + NAME + "}/{sub}")
-	public void addSub(@PathParam(NAME) String user, @PathParam("sub") String subUser);
-
-	@PUT
-	@Path("/sub/remove/{" + NAME + "}/{sub}")
-	public void removeSub(@PathParam(NAME) String user, @PathParam("sub") String subUser);
-
 }

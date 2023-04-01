@@ -4,12 +4,12 @@ import java.net.URI;
 import java.util.List;
 
 import sd2223.trab1.api.User;
-import sd2223.trab1.api.rest.UsersService;
 import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.GenericType;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
+import sd2223.trab1.api.rest.UsersService;
 import jakarta.ws.rs.core.Response.Status;
 
 public class RestUsersClient extends RestClient implements UsersService {
@@ -21,9 +21,7 @@ public class RestUsersClient extends RestClient implements UsersService {
         target = client.target(serverURI).path(UsersService.PATH);
     }
 
-    private String clt_createUser(User user) { // Invocação jersey sem comportamento de repetição
-        // teste de falhas -> metodo auxiliar, privado com outro nome
-        // FAZ o PEDIDO do CREATE USER
+    private String clt_createUser(User user) {
 
         Response r = target.request()
                 .accept(MediaType.APPLICATION_JSON)
@@ -132,14 +130,7 @@ public class RestUsersClient extends RestClient implements UsersService {
     }
 
     @Override
-    public void userExists(String name) {
-    }
-
-    @Override
-    public void addSub(String user, String subUser) {
-    }
-
-    @Override
-    public void removeSub(String user, String subUser) {
+    public User userExists(String name) {
+        return null;
     }
 }

@@ -27,16 +27,6 @@ public class GetUserClient {
 		var result = new RestUsersClient(serverUrl).getUser(name, pwd);
 		System.out.println("Result: " + result);
 
-		/*
-		 * String serviceName = Discovery.getInstance().knownUrisOf(serverUrl,
-		 * 1)[0].toString();
-		 * 
-		 * ClientConfig config = new ClientConfig();
-		 * Client client = ClientBuilder.newClient(config);
-		 * 
-		 * WebTarget target = client.target(serviceName).path(UsersService.PATH);
-		 */
-
 	}
 
 }

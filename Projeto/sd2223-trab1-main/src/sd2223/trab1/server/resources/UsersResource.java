@@ -41,28 +41,6 @@ public class UsersResource implements UsersService {
 		return user.getName() + "@" + user.getDomain();
 	}
 
-	private User checkUser(String name, String pwd) {
-		// Check if user is valid
-		if (name == null || pwd == null) {
-			Log.info("name or pwd null.");
-			throw new WebApplicationException(Status.BAD_REQUEST);
-		}
-		var user = users.get(name);
-		// Check if user exists
-		if (user == null) {
-			Log.info("User does not exist.");
-			throw new WebApplicationException(Status.NOT_FOUND);
-		}
-
-		// Check if the pwd is correct
-		if (!user.getPwd().equals(pwd)) {
-			Log.info("pwd is incorrect.");
-			throw new WebApplicationException(Status.FORBIDDEN);
-		}
-
-		return user;
-	}
-
 	@Override
 	public User getUser(String name, String pwd) {
 		Log.info("getUser : name = " + name + "; pwd = " + pwd);
@@ -91,9 +69,11 @@ public class UsersResource implements UsersService {
 	}
 
 	@Override
-	public User deleteUser(String name, String pwd) {// TODO delete do feeds
+	public User deleteUser(String name, String pwd) {
 		Log.info("deleteUser : user = " + name + "; pwd = " + pwd);
 		checkUser(name, pwd);
+
+		// Eliminar feed do user
 		return users.remove(name);
 	}
 
@@ -108,19 +88,25 @@ public class UsersResource implements UsersService {
 		return l;
 	}
 
-	@Override
-	public void addSub(String user, String subUser) {
-		String nameSub = subUser.split("@")[0];
-		users.get(nameSub).addFollower(user);
-
-	}
-
-	@Override
-	public void removeSub(String user, String subUser) {
-		String nameSub = subUser.split("@")[0];
-		if (!users.get(nameSub).getFollowers().containsKey(user))
+	private User checkUser(String name, String pwd) {
+		// Check if user is valid
+		if (name == null || pwd == null) {
+			Log.info("name or pwd null.");
+			throw new WebApplicationException(Status.BAD_REQUEST);
+		}
+		var user = users.get(name);
+		// Check if user exists
+		if (user == null) {
+			Log.info("User does not exist.");
 			throw new WebApplicationException(Status.NOT_FOUND);
-		users.get(nameSub).removeFollower(user);
-	}
+		}
 
+		// Check if the pwd is correct
+		if (!user.getPwd().equals(pwd)) {
+			Log.info("pwd is incorrect.");
+			throw new WebApplicationException(Status.FORBIDDEN);
+		}
+
+		return user;
+	}
 }
