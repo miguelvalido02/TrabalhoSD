@@ -63,7 +63,7 @@ public class FeedsResource implements FeedsService {
         String domain = nameDomain[1];
         User u = null;
 
-        u = verifyUser(name, domain, pwd, Status.FORBIDDEN);
+        u = verifyUser(name, domain, pwd);
         UUID id = UUID.randomUUID();
         long mid = id.getMostSignificantBits();
         msg.setId(mid);
@@ -142,15 +142,11 @@ public class FeedsResource implements FeedsService {
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
-        verifyUser(name, domain, pwd, Status.FORBIDDEN);
+        verifyUser(name, domain, pwd);
         Map<Long, Message> feed = feeds.get(name);
-        if (feed == null)
-            throw new WebApplicationException(Status.NOT_FOUND);
-        Message m = feed.get(mid);
-        if (m == null)
+        if (feed == null || feed.get(mid) == null)
             throw new WebApplicationException(Status.NOT_FOUND);
         feed.remove(mid);
-
     }
 
     @Override
@@ -228,7 +224,7 @@ public class FeedsResource implements FeedsService {
             // Garantir que o userSub existe (pedido ao servico users)
             User sub = findUser(domainSub, nameSub);
             // Garantir que o user existe
-            User u = verifyUser(name, domain, pwd, Status.FORBIDDEN);
+            User u = verifyUser(name, domain, pwd);
 
             // User subscreve userSub
             sub.addFollower(user);
@@ -254,7 +250,7 @@ public class FeedsResource implements FeedsService {
 
         try {
             // Garantir que o user existe
-            User u = verifyUser(name, domain, pwd, Status.FORBIDDEN);
+            User u = verifyUser(name, domain, pwd);
 
             // Garantir que o userSub existe (pedido ao servico users)
             User sub = findUser(domainSub, nameSub);
@@ -335,18 +331,18 @@ public class FeedsResource implements FeedsService {
         return r.readEntity(User.class);
     }
 
-    private User verifyUser(String name, String domain, String pwd, Status status) {
+    private User verifyUser(String name, String domain, String pwd) {
         try {
             Discovery d = Discovery.getInstance();
             URI userURI = d.knownUrisOf(domain, USERS_SERVICE);
             WebTarget target = client.target(userURI).path(UsersService.PATH);
-            return reTry(() -> getUser(name, pwd, target, status));
+            return reTry(() -> getUser(name, pwd, target));
         } catch (InterruptedException e) {
         }
         return null;
     }
 
-    private User getUser(String name, String pwd, WebTarget target, Status userPwdError) {
+    private User getUser(String name, String pwd, WebTarget target) {
         Response r = target.path(name)
                 .queryParam(UsersService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
@@ -354,9 +350,10 @@ public class FeedsResource implements FeedsService {
 
         if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
             return r.readEntity(User.class);// 200 OK
-        else if (r.getStatus() == Status.NOT_FOUND.getStatusCode()
-                || r.getStatus() == Status.FORBIDDEN.getStatusCode())
-            throw new WebApplicationException(userPwdError);// 403 pwd is wrong or user does not exist
+        else if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
+            throw new WebApplicationException(Status.NOT_FOUND);
+        else if (r.getStatus() == Status.FORBIDDEN.getStatusCode())
+            throw new WebApplicationException(Status.FORBIDDEN);// 403 pwd is wrong or user does not exist
         else
             throw new WebApplicationException(Status.BAD_REQUEST);// 400 otherwise
     }

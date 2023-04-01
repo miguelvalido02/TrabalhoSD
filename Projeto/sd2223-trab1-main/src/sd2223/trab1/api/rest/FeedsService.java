@@ -37,8 +37,8 @@ public interface FeedsService {
 	 * @param msg  the message object to be posted to the server
 	 * @param pwd  password of the user sending the message
 	 * @return 200 the unique numerical identifier for the posted message;
-	 *         403 if the publisher does not exist in the current domain or if the
-	 *         pwd is not correct
+	 *         404 if the publisher does not exist in the current domain
+	 *         403 if the pwd is not correct
 	 *         400 otherwise
 	 */
 	@POST
