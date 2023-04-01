@@ -15,7 +15,7 @@ import jakarta.ws.rs.core.Response.Status;
 @Singleton
 public class UsersResource implements UsersService {
 
-	private final Map<String, User> users = new ConcurrentHashMap<>();
+	private final Map<String, User> users = new ConcurrentHashMap<String, User>();
 
 	private static Logger Log = Logger.getLogger(UsersResource.class.getName());
 
@@ -43,7 +43,7 @@ public class UsersResource implements UsersService {
 
 	@Override
 	public User getUser(String name, String pwd) {
-		Log.info("getUser : name = " + name + "; pwd = " + pwd);
+		Log.info("getUser : name = " + name + " ; pwd = " + pwd);
 		return checkUser(name, pwd);
 	}
 
@@ -58,12 +58,12 @@ public class UsersResource implements UsersService {
 	@Override
 	public User updateUser(String name, String oldPwd, User user) {
 		Log.info("updateUser : name = " + name + "; pwd = " + oldPwd + " ; user = " + user);
-		var u = checkUser(name, oldPwd);
+		User u = checkUser(name, oldPwd);
 		if (u != null) {
 			String pwd = user.getPwd() == null ? oldPwd : user.getPwd();
+			u.setPwd(pwd);
 			String displayName = user.getDisplayName() == null ? u.getDisplayName() : user.getDisplayName();
-			u = new User(name, pwd, user.getDomain(), displayName);
-			users.put(name, u);
+			u.setDisplayName(displayName);
 		}
 		return u;
 	}
@@ -94,19 +94,17 @@ public class UsersResource implements UsersService {
 			Log.info("name or pwd null.");
 			throw new WebApplicationException(Status.BAD_REQUEST);
 		}
-		var user = users.get(name);
+		User user = users.get(name);
 		// Check if user exists
 		if (user == null) {
 			Log.info("User does not exist.");
 			throw new WebApplicationException(Status.NOT_FOUND);
 		}
-
 		// Check if the pwd is correct
 		if (!user.getPwd().equals(pwd)) {
 			Log.info("pwd is incorrect.");
 			throw new WebApplicationException(Status.FORBIDDEN);
 		}
-
 		return user;
 	}
 }

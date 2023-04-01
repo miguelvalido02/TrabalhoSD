@@ -15,7 +15,6 @@ import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.MediaType;
 import sd2223.trab1.server.Discovery;
 import jakarta.ws.rs.client.WebTarget;
-import sd2223.trab1.clients.RestClient;
 import sd2223.trab1.api.rest.UsersService;
 import sd2223.trab1.api.rest.FeedsService;
 import jakarta.ws.rs.core.Response.Status;
@@ -36,7 +35,7 @@ import jakarta.ws.rs.WebApplicationException;
 // Implementa FeedsService
 @Singleton
 public class FeedsResource implements FeedsService {
-    private static Logger Log = Logger.getLogger(RestClient.class.getName());
+    private static Logger Log = Logger.getLogger(FeedsResource.class.getName());
 
     private static final String USERS_SERVICE = "users";
     private static final int RETRY_SLEEP = 3000;
@@ -68,14 +67,19 @@ public class FeedsResource implements FeedsService {
         long mid = id.getMostSignificantBits();
         msg.setId(mid);
         msg.setCreationTime(System.currentTimeMillis());
-        Map<Long, Message> userFeed = feeds.get(name);
-        if (userFeed == null)
-            userFeed = new ConcurrentHashMap<Long, Message>();
-        userFeed.put(mid, msg);
+        /*
+         * Map<Long, Message> userFeed = feeds.get(name);
+         * if (userFeed == null)
+         * feeds.put(name, userFeed = new ConcurrentHashMap<Long, Message>());
+         * userFeed.put(mid, msg);
+         */
         // colocar mensagens nos feeds dos users do mesmo dominio
+        System.out.println("Print antes do postindomain");
         postInDomain(u, msg);
         // correr todos os seus seguidores e dar post no feed deles
+        System.out.println("Print antes do send outside");
         sendOutsideDomain(u, msg);
+        System.out.println("Depois de send outside domain");
         return mid;
 
     }
@@ -83,7 +87,10 @@ public class FeedsResource implements FeedsService {
     private void sendOutsideDomain(User u, Message msg) {
         Discovery d = Discovery.getInstance();
         // Para cada dominio dos followers enviar um pedido de postOutside
-        for (String domain : u.getFollowers().keySet()) {
+        Map<String, List<String>> followers = u.obtainFollowers();
+        System.out.println(followers);
+        System.out.println(followers.keySet());
+        for (String domain : u.obtainFollowers().keySet()) {
             if (domain.equals(u.getDomain()))
                 continue;
             Object[] data = new Object[] { u, msg };
@@ -109,9 +116,9 @@ public class FeedsResource implements FeedsService {
     }
 
     private void postInDomain(User u, Message msg) {
-        Map<String, List<String>> followers = u.getFollowers(); // domain <nomeUser, User>
-        if (followers != null) {
-            List<String> followersInDomain = followers.get(Domain.getDomain());
+        Map<String, List<String>> followers = u.obtainFollowers(); // domain <nomeUser, User>
+        List<String> followersInDomain = followers.get(Domain.getDomain());
+        if (followersInDomain != null) {
             for (String follower : followersInDomain) {
                 String name = follower.split("@")[0];
                 Map<Long, Message> followerFeed = feeds.get(name);
@@ -122,19 +129,22 @@ public class FeedsResource implements FeedsService {
                 followerFeed.put(msg.getId(), msg);
             }
         }
+
     }
 
     @Override
     public void postOutside(Object[] data) {
         User user = (User) data[0];
         Message msg = (Message) data[1];
-        for (String follower : user.getFollowers().get(Domain.getDomain())) {
-            String name = follower.split("@")[0];
-            Map<Long, Message> feed = feeds.get(name);
-            if (feed == null)
-                feeds.put(name, feed = new ConcurrentHashMap<Long, Message>());
-            feed.put(msg.getId(), msg);
-        }
+        List<String> followersInDomain = user.obtainFollowers().get(Domain.getDomain());
+        if (followersInDomain != null)
+            for (String follower : followersInDomain) {
+                String name = follower.split("@")[0];
+                Map<Long, Message> feed = feeds.get(name);
+                if (feed == null)
+                    feeds.put(name, feed = new ConcurrentHashMap<Long, Message>());
+                feed.put(msg.getId(), msg);
+            }
     }
 
     @Override
@@ -191,7 +201,6 @@ public class FeedsResource implements FeedsService {
                 Map<Long, Message> userFeed = feeds.get(name);
                 if (userFeed == null)
                     return new ArrayList<Message>();
-
                 return userFeed.values().stream().filter(m -> m.getCreationTime() > time).collect(Collectors.toList());
             } else {
                 Discovery d = Discovery.getInstance();
@@ -256,7 +265,7 @@ public class FeedsResource implements FeedsService {
             User sub = findUser(domainSub, nameSub);
 
             // Garantir que o user subscreve o sub
-            if (!u.getFollowing().contains(userSub))
+            if (!u.obtainFollowing().contains(userSub))
                 throw new WebApplicationException(Status.NOT_FOUND);// 404 if the userSub is not subscribed
 
             // User deixa de subscrever userSub
@@ -278,7 +287,7 @@ public class FeedsResource implements FeedsService {
         try {
             // Garantir que o user existe (pedido ao servico users)
             User u = findUser(domain, name);
-            return u.getFollowing();
+            return u.obtainFollowing();
 
         } catch (InterruptedException e) {
         }
@@ -347,9 +356,9 @@ public class FeedsResource implements FeedsService {
                 .queryParam(UsersService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
-
         if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
             return r.readEntity(User.class);// 200 OK
+
         else if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
             throw new WebApplicationException(Status.NOT_FOUND);
         else if (r.getStatus() == Status.FORBIDDEN.getStatusCode())

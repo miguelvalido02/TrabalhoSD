@@ -15,8 +15,16 @@ public class Message {
 		this.id = id;
 		this.user = user;
 		this.domain = domain;
-		this.creationTime = System.currentTimeMillis();
 		this.text = text;
+		this.creationTime = -1;
+	}
+
+	public Message() {
+		this.id = -1;
+		this.user = null;
+		this.domain = null;
+		this.creationTime = -1;
+		this.text = null;
 	}
 
 	public long getId() {

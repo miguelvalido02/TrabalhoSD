@@ -24,15 +24,17 @@ public class User {
 		this.name = null;
 		this.domain = null;
 		this.displayName = null;
+		this.followers = new HashMap<String, List<String>>();
+		this.following = new HashSet<String>();
 	}
 
-	public User(String name, String pwd, String domain, String displayName) {
+	public User(String name, String pwd, String displayName, String domain) {
 		this.pwd = pwd;
 		this.name = name;
 		this.domain = domain;
 		this.displayName = displayName;
-		followers = new HashMap<String, List<String>>();
-		following = new HashSet<String>();
+		this.followers = new HashMap<String, List<String>>();
+		this.following = new HashSet<String>();
 	}
 
 	public String getName() {
@@ -87,8 +89,8 @@ public class User {
 		domainList.remove(followerName);
 	}
 
-	public Map<String, List<String>> getFollowers() {
-		return followers;
+	public Map<String, List<String>> obtainFollowers() {
+		return this.followers;
 	}
 
 	public void addFollowing(String userDomain) {
@@ -99,7 +101,7 @@ public class User {
 		following.remove(userDomain);
 	}
 
-	public List<String> getFollowing() {
+	public List<String> obtainFollowing() {
 		return new ArrayList<String>(following);
 	}
 

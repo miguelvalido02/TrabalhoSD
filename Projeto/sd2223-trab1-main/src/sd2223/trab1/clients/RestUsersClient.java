@@ -27,9 +27,10 @@ public class RestUsersClient extends RestClient implements UsersService {
                 .accept(MediaType.APPLICATION_JSON)
                 .post(Entity.json(user));
 
-        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
+        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
+            System.out.println("User criado " + r.getStatus());
             return r.readEntity(String.class);
-        else
+        } else
             System.out.println("Error, HTTP error status: " + r.getStatus());
 
         return null;
@@ -41,7 +42,6 @@ public class RestUsersClient extends RestClient implements UsersService {
                 .queryParam(UsersService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
-
         if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
             System.out.println("Success:");
             u = r.readEntity(User.class);

@@ -7,11 +7,11 @@ import java.util.logging.Logger;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import sd2223.trab1.server.resources.UsersResource;
+import sd2223.trab1.server.resources.FeedsResource;
 
 public class FeedsServer {
 
-    private static Logger Log = Logger.getLogger(UsersServer.class.getName());
+    private static Logger Log = Logger.getLogger(FeedsServer.class.getName());
 
     static {
         System.setProperty("java.net.preferIPv4Stack", "true");
@@ -28,16 +28,14 @@ public class FeedsServer {
                 System.err.println("Use: java trab1.server.FeedsServer domain");
                 return;
             }
-
             String domain = args[0];
             Domain.setDomain(domain);
             ResourceConfig config = new ResourceConfig();
-            config.register(UsersResource.class);
+            config.register(FeedsResource.class);
 
             String ip = InetAddress.getLocalHost().getHostAddress();
             String serverURI = String.format(SERVER_URI_FMT, ip, PORT);
             JdkHttpServerFactory.createHttpServer(URI.create(serverURI), config);
-
             Log.info(String.format("%s Server ready @ %s\n", SERVICE, serverURI));
 
             // More code can be executed here...

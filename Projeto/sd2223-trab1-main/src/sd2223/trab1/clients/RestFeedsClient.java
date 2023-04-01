@@ -2,6 +2,7 @@ package sd2223.trab1.clients;
 
 import java.net.URI;
 import java.util.List;
+import java.util.logging.Logger;
 
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.rest.FeedsService;
@@ -28,7 +29,6 @@ public class RestFeedsClient extends RestClient implements FeedsService {
                 .queryParam(FeedsService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .post(Entity.json(msg));
-
         if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
             System.out.println("Success");
             return r.readEntity(Long.class);
