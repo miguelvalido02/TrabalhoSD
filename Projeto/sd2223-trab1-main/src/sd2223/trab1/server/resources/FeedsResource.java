@@ -73,7 +73,6 @@ public class FeedsResource implements FeedsService {
         long mid = id.getMostSignificantBits();
         msg.setId(mid);
         msg.setCreationTime(System.currentTimeMillis());
-
         // post no proprio feed
         Map<Long, Message> userFeed = feeds.get(name);
         if (userFeed == null)
@@ -83,22 +82,25 @@ public class FeedsResource implements FeedsService {
         Map<String, List<String>> userFollowers = followers.get(u.getName()); // domain <nomeUser, User>
         if (userFollowers != null) {
             // colocar mensagens nos feeds dos users do mesmo dominio
-            postInDomain(msg, userFollowers);
+            postInDomain(user, msg, userFollowers);
             // correr todos os seus seguidores e dar post no feed deles
             sendOutsideDomain(u, msg, userFollowers);
         }
         return mid;
     }
 
-    private void postInDomain(Message msg, Map<String, List<String>> userFollowers) {
+    private void postInDomain(String user, Message msg, Map<String, List<String>> userFollowers) {
         List<String> followersInDomain = userFollowers.get(Domain.getDomain());
         if (followersInDomain != null) {
             for (String follower : followersInDomain) {
                 String name = follower.split("@")[0];
-                Map<Long, Message> followerFeed = feeds.get(name);
-                if (followerFeed == null)
-                    feeds.put(name, followerFeed = new ConcurrentHashMap<Long, Message>());
-                followerFeed.put(msg.getId(), msg);
+                Set<String> followingListOfFollower = following.get(name);
+                if (followingListOfFollower != null && followingListOfFollower.contains(user)) {
+                    Map<Long, Message> followerFeed = feeds.get(name);
+                    if (followerFeed == null)
+                        feeds.put(name, followerFeed = new ConcurrentHashMap<Long, Message>());
+                    followerFeed.put(msg.getId(), msg);
+                }
             }
         }
     }
@@ -177,19 +179,21 @@ public class FeedsResource implements FeedsService {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
                 WebTarget target = client.target(userURI).path(FeedsService.PATH);
-                Response r = reTry(() -> getMessage(target, user, mid));
-                if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
-                    throw new WebApplicationException(Status.NOT_FOUND);// 404 user or message does not exist
-                return r.readEntity(Message.class);// 200 OK
+                Message m = reTry(() -> getMessage(target, user, mid));
+
+                return m;
             }
         } catch (InterruptedException e) {
         }
         return null;
     }
 
-    private Response getMessage(WebTarget target, String user, Long mid) {
-        return target.path(user).path(Long.toString(mid)).request().accept(MediaType.APPLICATION_JSON)
+    private Message getMessage(WebTarget target, String user, Long mid) {
+        Response r = target.path(user).path(Long.toString(mid)).request().accept(MediaType.APPLICATION_JSON)
                 .get();
+        if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
+            throw new WebApplicationException(Status.NOT_FOUND);// 404 user or message does not exist
+        return r.readEntity(Message.class);// 200 OK
     }
 
     @Override
@@ -210,21 +214,22 @@ public class FeedsResource implements FeedsService {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
                 WebTarget target = client.target(userURI).path(FeedsService.PATH);
-                Response r = reTry(() -> getMessages(target, user, time));
-                if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
-                    throw new WebApplicationException(Status.NOT_FOUND);// 404 user or message does not exist
-                return r.readEntity(new GenericType<List<Message>>() {
-                });// 200 OK
+                List<Message> l = reTry(() -> getMessages(target, user, time));
+                return l;
             }
         } catch (InterruptedException e) {
         }
         return null;
     }
 
-    private Response getMessages(WebTarget target, String user, long time) {
-        return target.path(user).queryParam(FeedsService.TIME, time).request()
+    private List<Message> getMessages(WebTarget target, String user, long time) {
+        Response r = target.path(user).queryParam(FeedsService.TIME, time).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
+        if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
+            throw new WebApplicationException(Status.NOT_FOUND);// 404 user or message does not exist
+        return r.readEntity(new GenericType<List<Message>>() {
+        });// 200 OK
     }
 
     @Override
@@ -422,22 +427,22 @@ public class FeedsResource implements FeedsService {
 
     private User findUser(String domain, String name) {
         Discovery d = Discovery.getInstance();
-        User u = reTry(() -> findUser(name, domain, d));
-
-        return u;
-    }
-
-    private User findUser(String name, String domain, Discovery d) {
         try {
             URI userURI = d.knownUrisOf(domain, USERS_SERVICE);
             WebTarget target = client.target(userURI).path(UsersService.PATH);
-            Response r = target.path("find").path(name).request().accept(MediaType.APPLICATION_JSON).get();
-            if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
-                throw new WebApplicationException(Status.NOT_FOUND);// 404 user does not exist
-            if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
-                return r.readEntity(User.class);
+            return reTry(() -> findUser(name, domain, target, d));
         } catch (InterruptedException e) {
+
         }
+        return null;
+    }
+
+    private User findUser(String name, String domain, WebTarget target, Discovery d) {
+        Response r = target.path("find").path(name).request().accept(MediaType.APPLICATION_JSON).get();
+        if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
+            throw new WebApplicationException(Status.NOT_FOUND);// 404 user does not exist
+        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
+            return r.readEntity(User.class);
         return null;
     }
 

@@ -65,8 +65,8 @@ class DiscoveryImpl implements Discovery {
 	private Map<String, Cache<String, URI>> urisMap;
 	// The pre-aggreed multicast endpoint assigned to perform discovery.
 
-	static final int DISCOVERY_RETRY_TIMEOUT = 5000;
-	static final int DISCOVERY_ANNOUNCE_PERIOD = 15000;// 15 sec
+	static final int DISCOVERY_RETRY_TIMEOUT = 3000;
+	static final int DISCOVERY_ANNOUNCE_PERIOD = 1000;// 1 sec
 
 	// Replace with appropriate values...
 	static final InetSocketAddress DISCOVERY_ADDR = new InetSocketAddress("230.120.130.145", 1234);
