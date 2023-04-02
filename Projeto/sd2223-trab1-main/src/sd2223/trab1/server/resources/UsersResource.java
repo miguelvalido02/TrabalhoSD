@@ -1,25 +1,49 @@
 package sd2223.trab1.server.resources;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.logging.Logger;
+import java.util.function.Supplier;
+import java.util.concurrent.ConcurrentHashMap;
 
 import sd2223.trab1.api.User;
+import sd2223.trab1.server.Domain;
+import sd2223.trab1.server.Discovery;
+import sd2223.trab1.api.rest.FeedsService;
 import sd2223.trab1.api.rest.UsersService;
+
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
+
 import jakarta.inject.Singleton;
-import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.WebApplicationException;
 
 @Singleton
 public class UsersResource implements UsersService {
+	private static final int MAX_RETRIES = 10;
+	private static final int RETRY_SLEEP = 3000;
+
+	private static final String FEEDS_SERVICE = "feeds";
 
 	private final Map<String, User> users = new ConcurrentHashMap<String, User>();
 
 	private static Logger Log = Logger.getLogger(UsersResource.class.getName());
 
+	private Client client;
+	private ClientConfig config;
+
 	public UsersResource() {
+		config = new ClientConfig();
+		config.property(ClientProperties.READ_TIMEOUT, 5000);
+		config.property(ClientProperties.CONNECT_TIMEOUT, 5000);
+		client = ClientBuilder.newClient(config);
 	}
 
 	@Override
@@ -65,17 +89,7 @@ public class UsersResource implements UsersService {
 			u.setPwd(pwd);
 			String displayName = user.getDisplayName() == null ? u.getDisplayName() : user.getDisplayName();
 			u.setDisplayName(displayName);
-			List<String> following = user.obtainFollowing();
-			if (following != null)
-				for (String follow : following)
-					u.addFollowing(follow);
-			Map<String, List<String>> followers = user.obtainFollowers();
-			if (followers != null)
-				for (String domain : followers.keySet())
-					for (String follower : followers.get(domain))
-						u.addFollower(follower);
 		}
-		users.put(u.getName(), u);
 		return u;
 	}
 
@@ -85,7 +99,22 @@ public class UsersResource implements UsersService {
 		checkUser(name, pwd);
 
 		// Eliminar feed do user
+		reTry(() -> {
+			deleteFeed(name, pwd);
+			return null;
+		});
 		return users.remove(name);
+	}
+
+	private void deleteFeed(String name, String pwd) {
+		try {
+			Discovery d = Discovery.getInstance();
+			URI userURI = d.knownUrisOf(Domain.getDomain(), FEEDS_SERVICE);
+			WebTarget target = client.target(userURI).path(FeedsService.PATH);
+			target.path("delete").path(name).path(Domain.getDomain()).queryParam(FeedsService.PWD, pwd).request()
+					.delete();
+		} catch (InterruptedException e) {
+		}
 	}
 
 	@Override
@@ -117,5 +146,26 @@ public class UsersResource implements UsersService {
 			throw new WebApplicationException(Status.FORBIDDEN);
 		}
 		return user;
+	}
+
+	protected <T> T reTry(Supplier<T> func) {
+		// método generico recebe uma funçao que quando invocada devolve T.
+		// createUser, etc...
+		for (int i = 0; i < MAX_RETRIES; i++)
+			try {
+				return func.get();
+			} catch (ProcessingException x) {
+				System.err.println(x.getMessage());
+				Log.fine("ProcessingException: " + x.getMessage());
+				sleep(RETRY_SLEEP);
+			}
+		return null;
+	}
+
+	private void sleep(int ms) {
+		try {
+			Thread.sleep(ms);
+		} catch (InterruptedException x) { // nothing to do...
+		}
 	}
 }

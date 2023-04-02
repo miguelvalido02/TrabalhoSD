@@ -171,4 +171,8 @@ public class RestFeedsClient extends RestClient implements FeedsService {
     public void postOutside(Object[] data) {
     }
 
+    @Override
+    public void deleteFeed(String user, String pwd, String domain) {
+    }
+
 }

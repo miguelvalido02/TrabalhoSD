@@ -149,4 +149,8 @@ public interface FeedsService {
 	@Path("/sub/list/{" + USER + "}")
 	@Produces(MediaType.APPLICATION_JSON)
 	List<String> listSubs(@PathParam(USER) String user);
+
+	@DELETE
+	@Path("/delete/{" + USER + "}/{" + DOMAIN + "}")
+	public void deleteFeed(@PathParam(USER) String user, @PathParam(DOMAIN) String domain, @QueryParam(PWD) String pwd);
 }
