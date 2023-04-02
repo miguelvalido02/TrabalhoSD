@@ -67,12 +67,14 @@ public class FeedsResource implements FeedsService {
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
-
+        if (!domain.equals(Domain.getDomain()))
+            throw new WebApplicationException(Status.BAD_REQUEST);
         User u = verifyUser(name, domain, pwd);
         UUID id = UUID.randomUUID();
         long mid = id.getMostSignificantBits();
         msg.setId(mid);
         msg.setCreationTime(System.currentTimeMillis());
+        Log.info("post:" + user + msg);
         // post no proprio feed
         Map<Long, Message> userFeed = feeds.get(name);
         if (userFeed == null)
@@ -226,14 +228,17 @@ public class FeedsResource implements FeedsService {
         Response r = target.path(user).queryParam(FeedsService.TIME, time).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
+        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
+            return r.readEntity(new GenericType<List<Message>>() {
+            });// 200 OK
         if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
             throw new WebApplicationException(Status.NOT_FOUND);// 404 user or message does not exist
-        return r.readEntity(new GenericType<List<Message>>() {
-        });// 200 OK
+        return null;
     }
 
     @Override
     public void subUser(String user, String userSub, String pwd) {
+        Log.info("subUser:" + user + " sub:" + userSub);
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
@@ -283,6 +288,7 @@ public class FeedsResource implements FeedsService {
 
     @Override
     public void unsubscribeUser(String user, String userSub, String pwd) {
+        Log.info("unsub: " + user + " sub: " + userSub);
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
