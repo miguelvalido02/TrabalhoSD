@@ -41,7 +41,7 @@ public class FeedsResource implements FeedsService {
     private static Logger Log = Logger.getLogger(FeedsResource.class.getName());
 
     private static final int MAX_RETRIES = 10;
-    private static final int RETRY_SLEEP = 3000;
+    private static final int RETRY_SLEEP = 500;
     private static final String USERS_SERVICE = "users";
 
     private static final String FEEDS_SERVICE = "feeds";
@@ -113,10 +113,9 @@ public class FeedsResource implements FeedsService {
         for (String domain : userFollowers.keySet()) {
             if (domain.equals(u.getDomain()))
                 continue;
-            Object[] data = new Object[] { u, msg };
             Thread thread = new Thread(() -> {
                 reTry(() -> {
-                    requestPostOutsideDomain(domain, d, data);
+                    requestPostOutsideDomain(domain, d, u.getName() + "@" + u.getDomain(), msg);
                     return null;
                 });
             });
@@ -125,25 +124,22 @@ public class FeedsResource implements FeedsService {
         }
     }
 
-    private void requestPostOutsideDomain(String domain, Discovery d, Object[] data) {
+    private void requestPostOutsideDomain(String domain, Discovery d, String user, Message msg) {
         try {
+            Log.info("entrei no requesPostOutside do dominio " + domain);
             URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
-            WebTarget target = client.target(userURI).path(FeedsService.PATH).path("post");
-            target.request().post(Entity.json(data));
+            WebTarget target = client.target(userURI).path(FeedsService.PATH).path("post").path(user);
+            target.request().post(Entity.json(msg));
         } catch (InterruptedException e) {
         }
     }
 
     @Override
-    public void postOutside(Object[] data) {
-        User user = (User) data[0];
-        Message msg = (Message) data[1];
-        String nameDomain = user.getName() + "@" + user.getDomain();
-
+    public void postOutside(String user, Message msg) {
         for (Map.Entry<String, Set<String>> entry : following.entrySet()) {
             String userName = entry.getKey();
             Set<String> followingList = entry.getValue();
-            if (followingList.contains(nameDomain)) {
+            if (followingList.contains(user)) {
                 Map<Long, Message> feed = feeds.get(userName);
                 if (feed == null)
                     feeds.put(userName, feed = new ConcurrentHashMap<Long, Message>());
@@ -193,13 +189,16 @@ public class FeedsResource implements FeedsService {
     private Message getMessage(WebTarget target, String user, Long mid) {
         Response r = target.path(user).path(Long.toString(mid)).request().accept(MediaType.APPLICATION_JSON)
                 .get();
+        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
+            return r.readEntity(Message.class);// 200 OK
         if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
             throw new WebApplicationException(Status.NOT_FOUND);// 404 user or message does not exist
-        return r.readEntity(Message.class);// 200 OK
+        return null;
     }
 
     @Override
     public List<Message> getMessages(String user, long time) {
+        Log.info("getMessages:" + user + " time: " + time + " currentTime: " + System.currentTimeMillis());
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
@@ -267,7 +266,7 @@ public class FeedsResource implements FeedsService {
                 subFollowers.put(domain, followersInDomain = new ArrayList<String>());
             followersInDomain.add(user);
         } else {
-            reTry(() -> {
+            reTry(() -> {// TODO thread
                 subOutside(domainSub, user, userSub, pwd);
                 return null;
             });
@@ -319,7 +318,7 @@ public class FeedsResource implements FeedsService {
                 throw new WebApplicationException(Status.NOT_FOUND);// 404 if the userSub is not subscribed
             subFollowersInDomain.remove(user);
         } else {
-            reTry(() -> {
+            reTry(() -> {// TODO thread
                 unsubOutside(domainSub, user, userSub, pwd);
                 return null;
             });
@@ -361,7 +360,7 @@ public class FeedsResource implements FeedsService {
             Set<String> followings = following.get(user);
             if (followings != null) {
                 for (String sub : followings)
-                    unsubscribeUser(nameDomain, sub, pwd);
+                    unsubscribeUser(nameDomain, sub, pwd); // TODO pode ser mais eficiente
                 following.remove(user);
             }
 

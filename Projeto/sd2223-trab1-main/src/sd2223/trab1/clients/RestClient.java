@@ -17,7 +17,7 @@ public class RestClient {
     protected static final int READ_TIMEOUT = 5000;
     protected static final int CONNECT_TIMEOUT = 5000;
 
-    protected static final int RETRY_SLEEP = 3000;
+    protected static final int RETRY_SLEEP = 500;
     protected static final int MAX_RETRIES = 10;
 
     final URI serverURI;

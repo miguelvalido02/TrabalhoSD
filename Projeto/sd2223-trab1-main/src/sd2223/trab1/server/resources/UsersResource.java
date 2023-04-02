@@ -28,7 +28,7 @@ import jakarta.ws.rs.WebApplicationException;
 @Singleton
 public class UsersResource implements UsersService {
 	private static final int MAX_RETRIES = 10;
-	private static final int RETRY_SLEEP = 3000;
+	private static final int RETRY_SLEEP = 500;
 
 	private static final String FEEDS_SERVICE = "feeds";
 
@@ -48,7 +48,7 @@ public class UsersResource implements UsersService {
 
 	@Override
 	public String createUser(User user) {
-		Log.info("createUser : " + user);
+		// Log.info("createUser : " + user);
 
 		// Check if user data is valid
 		if (user == null || user.getDisplayName() == null || user.getPwd() == null || user.getName() == null ||
@@ -67,7 +67,7 @@ public class UsersResource implements UsersService {
 
 	@Override
 	public User getUser(String name, String pwd) {
-		Log.info("getUser : name = " + name + " ; pwd = " + pwd);
+		// Log.info("getUser : name = " + name + " ; pwd = " + pwd);
 		return checkUser(name, pwd);
 	}
 
@@ -81,7 +81,8 @@ public class UsersResource implements UsersService {
 
 	@Override
 	public User updateUser(String name, String oldPwd, User user) {
-		Log.info("updateUser : name = " + name + "; pwd = " + oldPwd + " ; user = " + user);
+		// Log.info("updateUser : name = " + name + "; pwd = " + oldPwd + " ; user = " +
+		// user);
 		User u = checkUser(name, oldPwd);
 
 		if (u != null) {
@@ -95,14 +96,16 @@ public class UsersResource implements UsersService {
 
 	@Override
 	public User deleteUser(String name, String pwd) {
-		Log.info("deleteUser : user = " + name + "; pwd = " + pwd);
+		// Log.info("deleteUser : user = " + name + "; pwd = " + pwd);
 		checkUser(name, pwd);
 
-		// Eliminar feed do user
-		reTry(() -> {
-			deleteFeed(name, pwd);
-			return null;
+		Thread thread = new Thread(() -> {
+			reTry(() -> {// TODO thread
+				deleteFeed(name, pwd);
+				return null;
+			});
 		});
+		thread.start();
 		return users.remove(name);
 	}
 
@@ -119,7 +122,7 @@ public class UsersResource implements UsersService {
 
 	@Override
 	public List<User> searchUsers(String pattern) {
-		Log.info("searchUsers : pattern = " + pattern);
+		// Log.info("searchUsers : pattern = " + pattern);
 		List<User> l = new ArrayList<User>();
 		for (User user : users.values()) {
 			if (user.getName().contains(pattern))

@@ -168,7 +168,7 @@ public class RestFeedsClient extends RestClient implements FeedsService {
     }
 
     @Override
-    public void postOutside(Object[] data) {
+    public void postOutside(String user, Message msg) {
     }
 
     @Override
