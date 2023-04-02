@@ -2,12 +2,14 @@ package sd2223.trab1.server.resources;
 
 import java.util.Map;
 import java.util.List;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 import java.util.function.Supplier;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ConcurrentHashMap;
 
+import java.net.URI;
 import sd2223.trab1.api.User;
 import sd2223.trab1.server.Domain;
 import sd2223.trab1.server.Discovery;
@@ -38,12 +40,14 @@ public class UsersResource implements UsersService {
 
 	private Client client;
 	private ClientConfig config;
+	private ExecutorService executor;
 
 	public UsersResource() {
 		config = new ClientConfig();
 		config.property(ClientProperties.READ_TIMEOUT, 5000);
 		config.property(ClientProperties.CONNECT_TIMEOUT, 5000);
 		client = ClientBuilder.newClient(config);
+		executor = Executors.newFixedThreadPool(20);
 	}
 
 	@Override
@@ -56,11 +60,12 @@ public class UsersResource implements UsersService {
 			Log.info("User object invalid.");
 			throw new WebApplicationException(Status.BAD_REQUEST);
 		}
-
-		// Insert new user, checking if name already exists
-		if (users.putIfAbsent(user.getName(), user) != null) {
-			Log.info("User already exists.");
-			throw new WebApplicationException(Status.CONFLICT);
+		synchronized (users) {
+			// Insert new user, checking if name already exists
+			if (users.putIfAbsent(user.getName(), user) != null) {
+				Log.info("User already exists.");
+				throw new WebApplicationException(Status.CONFLICT);
+			}
 		}
 		return user.getName() + "@" + user.getDomain();
 	}
@@ -68,7 +73,9 @@ public class UsersResource implements UsersService {
 	@Override
 	public User getUser(String name, String pwd) {
 		// Log.info("getUser : name = " + name + " ; pwd = " + pwd);
-		return checkUser(name, pwd);
+		synchronized (users) {
+			return checkUser(name, pwd);
+		}
 	}
 
 	@Override
@@ -83,30 +90,34 @@ public class UsersResource implements UsersService {
 	public User updateUser(String name, String oldPwd, User user) {
 		// Log.info("updateUser : name = " + name + "; pwd = " + oldPwd + " ; user = " +
 		// user);
-		User u = checkUser(name, oldPwd);
+		synchronized (users) {
+			User u = checkUser(name, oldPwd);
 
-		if (u != null) {
-			String pwd = user.getPwd() == null ? oldPwd : user.getPwd();
-			u.setPwd(pwd);
-			String displayName = user.getDisplayName() == null ? u.getDisplayName() : user.getDisplayName();
-			u.setDisplayName(displayName);
+			if (u != null) {
+				String pwd = user.getPwd() == null ? oldPwd : user.getPwd();
+				u.setPwd(pwd);
+				String displayName = user.getDisplayName() == null ? u.getDisplayName() : user.getDisplayName();
+				u.setDisplayName(displayName);
+			}
+
+			return u;
 		}
-		return u;
 	}
 
 	@Override
 	public User deleteUser(String name, String pwd) {
 		// Log.info("deleteUser : user = " + name + "; pwd = " + pwd);
-		checkUser(name, pwd);
+		synchronized (users) {
+			checkUser(name, pwd);
 
-		Thread thread = new Thread(() -> {
-			reTry(() -> {// TODO thread
-				deleteFeed(name, pwd);
-				return null;
+			executor.submit(() -> {
+				reTry(() -> {
+					deleteFeed(name, pwd);
+					return null;
+				});
 			});
-		});
-		thread.start();
-		return users.remove(name);
+			return users.remove(name);
+		}
 	}
 
 	private void deleteFeed(String name, String pwd) {
@@ -124,9 +135,11 @@ public class UsersResource implements UsersService {
 	public List<User> searchUsers(String pattern) {
 		// Log.info("searchUsers : pattern = " + pattern);
 		List<User> l = new ArrayList<User>();
-		for (User user : users.values()) {
-			if (user.getName().contains(pattern))
-				l.add(new User(user.getName(), "", user.getDomain(), user.getDisplayName()));
+		synchronized (users) {
+			for (User user : users.values()) {
+				if (user.getName().contains(pattern))
+					l.add(new User(user.getName(), "", user.getDomain(), user.getDisplayName()));
+			}
 		}
 		return l;
 	}
