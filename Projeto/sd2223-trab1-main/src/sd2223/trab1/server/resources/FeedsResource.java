@@ -236,37 +236,32 @@ public class FeedsResource implements FeedsService {
         String[] nameDomainSub = userSub.split("@");
         String nameSub = nameDomainSub[0];
         String domainSub = nameDomainSub[1];
+        // Garantir que o userSub existe (pedido ao servico users)
+        findUser(domainSub, nameSub);
+        // Garantir que o user existe
+        verifyUser(name, domain, pwd);
 
-        try {
-            // Garantir que o userSub existe (pedido ao servico users)
-            findUser(domainSub, nameSub);
-            // Garantir que o user existe
-            verifyUser(name, domain, pwd);
-
-            // User subscreve userSub
-            if (domain.equals(Domain.getDomain())) {
-                Set<String> userFollowing = following.get(name);
-                if (userFollowing == null)
-                    following.put(name, userFollowing = new HashSet<String>());
-                userFollowing.add(userSub);
-            }
-            if (domainSub.equals(Domain.getDomain())) {
-                Map<String, List<String>> subFollowers = followers.get(nameSub);
-                if (subFollowers == null)
-                    followers.put(nameSub, subFollowers = new ConcurrentHashMap<String, List<String>>());
-                List<String> followersInDomain = subFollowers.get(domain);
-                if (followersInDomain == null)
-                    subFollowers.put(domain, followersInDomain = new ArrayList<String>());
-                followersInDomain.add(user);
-            } else {
-                reTry(() -> {
-                    subOutside(domainSub, user, userSub, pwd);
-                    return null;
-                });
-            }
-        } catch (InterruptedException e) {
+        // User subscreve userSub
+        if (domain.equals(Domain.getDomain())) {
+            Set<String> userFollowing = following.get(name);
+            if (userFollowing == null)
+                following.put(name, userFollowing = new HashSet<String>());
+            userFollowing.add(userSub);
         }
-
+        if (domainSub.equals(Domain.getDomain())) {
+            Map<String, List<String>> subFollowers = followers.get(nameSub);
+            if (subFollowers == null)
+                followers.put(nameSub, subFollowers = new ConcurrentHashMap<String, List<String>>());
+            List<String> followersInDomain = subFollowers.get(domain);
+            if (followersInDomain == null)
+                subFollowers.put(domain, followersInDomain = new ArrayList<String>());
+            followersInDomain.add(user);
+        } else {
+            reTry(() -> {
+                subOutside(domainSub, user, userSub, pwd);
+                return null;
+            });
+        }
     }
 
     private void subOutside(String subDomain, String user, String userSub, String pwd) {
@@ -291,36 +286,32 @@ public class FeedsResource implements FeedsService {
         String nameSub = nameDomainSub[0];
         String domainSub = nameDomainSub[1];
 
-        try {
-            // Garantir que o user existe
-            verifyUser(name, domain, pwd);
+        // Garantir que o user existe
+        verifyUser(name, domain, pwd);
 
-            // Garantir que o userSub existe (pedido ao servico users)
-            findUser(domainSub, nameSub);
+        // Garantir que o userSub existe (pedido ao servico users)
+        findUser(domainSub, nameSub);
 
-            // Garantir que o user subscreve o sub
-            if (Domain.getDomain().equals(domain)) {
-                Set<String> userFollowing = following.get(name);
-                if (userFollowing == null || !userFollowing.contains(userSub))
-                    throw new WebApplicationException(Status.NOT_FOUND);// 404 if the userSub is not subscribed
-                userFollowing.remove(userSub);
-            }
-            // User deixa de subscrever userSub
-            if (Domain.getDomain().equals(domainSub)) {
-                Map<String, List<String>> subFollowers = followers.get(nameSub);
-                List<String> subFollowersInDomain = null;
-                if (subFollowers == null || (subFollowersInDomain = subFollowers.get(domain)) == null
-                        || !subFollowersInDomain.contains(user))
-                    throw new WebApplicationException(Status.NOT_FOUND);// 404 if the userSub is not subscribed
-                subFollowersInDomain.remove(user);
-            } else {
-                reTry(() -> {
-                    unsubOutside(domainSub, user, userSub, pwd);
-                    return null;
-                });
-            }
-
-        } catch (InterruptedException e) {
+        // Garantir que o user subscreve o sub
+        if (Domain.getDomain().equals(domain)) {
+            Set<String> userFollowing = following.get(name);
+            if (userFollowing == null || !userFollowing.contains(userSub))
+                throw new WebApplicationException(Status.NOT_FOUND);// 404 if the userSub is not subscribed
+            userFollowing.remove(userSub);
+        }
+        // User deixa de subscrever userSub
+        if (Domain.getDomain().equals(domainSub)) {
+            Map<String, List<String>> subFollowers = followers.get(nameSub);
+            List<String> subFollowersInDomain = null;
+            if (subFollowers == null || (subFollowersInDomain = subFollowers.get(domain)) == null
+                    || !subFollowersInDomain.contains(user))
+                throw new WebApplicationException(Status.NOT_FOUND);// 404 if the userSub is not subscribed
+            subFollowersInDomain.remove(user);
+        } else {
+            reTry(() -> {
+                unsubOutside(domainSub, user, userSub, pwd);
+                return null;
+            });
         }
     }
 
@@ -343,16 +334,11 @@ public class FeedsResource implements FeedsService {
         String name = nameDomain[0];
         String domain = nameDomain[1];
 
-        try {
-            // Garantir que o user existe (pedido ao servico users)
-            findUser(domain, name);
-            if (following.get(name) == null)
-                return new ArrayList<String>();
-            return new ArrayList<String>(following.get(name));
-
-        } catch (InterruptedException e) {
-        }
-        return new ArrayList<String>();
+        // Garantir que o user existe (pedido ao servico users)
+        findUser(domain, name);
+        if (following.get(name) == null)
+            return new ArrayList<String>();
+        return new ArrayList<String>(following.get(name));
     }
 
     @Override
@@ -434,19 +420,25 @@ public class FeedsResource implements FeedsService {
         }
     }
 
-    private User findUser(String domain, String name) throws InterruptedException {
+    private User findUser(String domain, String name) {
         Discovery d = Discovery.getInstance();
-        URI userURI = d.knownUrisOf(domain, USERS_SERVICE);
-        WebTarget target = client.target(userURI).path(UsersService.PATH);
-        Response r = reTry(() -> findUser(target, name));
+        User u = reTry(() -> findUser(name, domain, d));
 
-        if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
-            throw new WebApplicationException(Status.NOT_FOUND);// 404 user does not exist
-        return r.readEntity(User.class);
+        return u;
     }
 
-    private Response findUser(WebTarget target, String name) {
-        return target.path("find").path(name).request().accept(MediaType.APPLICATION_JSON).get();
+    private User findUser(String name, String domain, Discovery d) {
+        try {
+            URI userURI = d.knownUrisOf(domain, USERS_SERVICE);
+            WebTarget target = client.target(userURI).path(UsersService.PATH);
+            Response r = target.path("find").path(name).request().accept(MediaType.APPLICATION_JSON).get();
+            if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
+                throw new WebApplicationException(Status.NOT_FOUND);// 404 user does not exist
+            if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
+                return r.readEntity(User.class);
+        } catch (InterruptedException e) {
+        }
+        return null;
     }
 
     private User verifyUser(String name, String domain, String pwd) {
