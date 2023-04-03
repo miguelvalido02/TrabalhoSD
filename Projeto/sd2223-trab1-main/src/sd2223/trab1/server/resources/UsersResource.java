@@ -35,12 +35,14 @@ public class UsersResource implements UsersService {
 	private static final String FEEDS_SERVICE = "feeds";
 
 	private final Map<String, User> users = new ConcurrentHashMap<String, User>();
+	private final Map<String, User> users3 = new ConcurrentHashMap<String, User>();
 
 	private static Logger Log = Logger.getLogger(UsersResource.class.getName());
 
 	private Client client;
 	private ClientConfig config;
 	private ExecutorService executor;
+	private boolean locked;
 
 	public UsersResource() {
 		config = new ClientConfig();
@@ -48,18 +50,30 @@ public class UsersResource implements UsersService {
 		config.property(ClientProperties.CONNECT_TIMEOUT, 5000);
 		client = ClientBuilder.newClient(config);
 		executor = Executors.newFixedThreadPool(20);
+		this.locked = false;
+
+	}
+
+	private void execute() {
+		Log.severe("EXECUTE: ANTES SYNC");
+		synchronized (users) {
+			Log.severe("EXECUTE: DEPOIS SYNC");
+			while (locked)
+				;
+			locked = true;
+		}
 	}
 
 	@Override
 	public String createUser(User user) {
 		// Log.info("createUser : " + user);
-
 		// Check if user data is valid
 		if (user == null || user.getDisplayName() == null || user.getPwd() == null || user.getName() == null ||
 				user.getDomain() == null) {
 			Log.info("User object invalid.");
 			throw new WebApplicationException(Status.BAD_REQUEST);
 		}
+		// execute();
 		synchronized (users) {
 			// Insert new user, checking if name already exists
 			if (users.putIfAbsent(user.getName(), user) != null) {
@@ -67,20 +81,25 @@ public class UsersResource implements UsersService {
 				throw new WebApplicationException(Status.CONFLICT);
 			}
 		}
+		locked = false;
 		return user.getName() + "@" + user.getDomain();
 	}
 
 	@Override
 	public User getUser(String name, String pwd) {
 		// Log.info("getUser : name = " + name + " ; pwd = " + pwd);
-		synchronized (users) {
-			return checkUser(name, pwd);
-		}
+		Log.severe("getUser, antes do execute");
+		// execute();
+		Log.severe("getUser, depois do execute");
+		User u = checkUser(name, pwd);
+		locked = false;
+		return u;
 	}
 
 	@Override
 	public User userExists(String name) {
-		User u = users.get(name);
+		User u = null;
+		u = users.get(name);
 		if (u == null)
 			throw new WebApplicationException(Status.NOT_FOUND);
 		return u;
@@ -90,34 +109,38 @@ public class UsersResource implements UsersService {
 	public User updateUser(String name, String oldPwd, User user) {
 		// Log.info("updateUser : name = " + name + "; pwd = " + oldPwd + " ; user = " +
 		// user);
-		synchronized (users) {
-			User u = checkUser(name, oldPwd);
+		// execute();
 
+		User u = checkUser(name, oldPwd);
+		synchronized (users) {
 			if (u != null) {
 				String pwd = user.getPwd() == null ? oldPwd : user.getPwd();
 				u.setPwd(pwd);
 				String displayName = user.getDisplayName() == null ? u.getDisplayName() : user.getDisplayName();
 				u.setDisplayName(displayName);
 			}
-
-			return u;
 		}
+		locked = false;
+		return u;
 	}
 
 	@Override
 	public User deleteUser(String name, String pwd) {
 		// Log.info("deleteUser : user = " + name + "; pwd = " + pwd);
-		synchronized (users) {
-			checkUser(name, pwd);
-
-			executor.submit(() -> {
-				reTry(() -> {
-					deleteFeed(name, pwd);
-					return null;
-				});
+		// execute();
+		checkUser(name, pwd);
+		executor.submit(() -> {
+			reTry(() -> {
+				deleteFeed(name, pwd);
+				return null;
 			});
-			return users.remove(name);
+		});
+		synchronized (users) {
+			User u = users.remove(name);
+			locked = false;
+			return u;
 		}
+
 	}
 
 	private void deleteFeed(String name, String pwd) {
@@ -135,12 +158,14 @@ public class UsersResource implements UsersService {
 	public List<User> searchUsers(String pattern) {
 		// Log.info("searchUsers : pattern = " + pattern);
 		List<User> l = new ArrayList<User>();
+		// execute();
 		synchronized (users) {
 			for (User user : users.values()) {
 				if (user.getName().contains(pattern))
 					l.add(new User(user.getName(), "", user.getDomain(), user.getDisplayName()));
 			}
 		}
+		locked = false;
 		return l;
 	}
 
@@ -150,18 +175,21 @@ public class UsersResource implements UsersService {
 			Log.info("name or pwd null.");
 			throw new WebApplicationException(Status.BAD_REQUEST);
 		}
-		User user = users.get(name);
-		// Check if user exists
-		if (user == null) {
-			Log.info("User does not exist.");
-			throw new WebApplicationException(Status.NOT_FOUND);
+		synchronized (users) {
+			User user = users.get(name);
+			// Check if user exists
+			if (user == null) {
+				Log.info("User does not exist.");
+				throw new WebApplicationException(Status.NOT_FOUND);
+			}
+			// Check if the pwd is correct
+			if (!user.getPwd().equals(pwd)) {
+				Log.info("pwd is incorrect.");
+				throw new WebApplicationException(Status.FORBIDDEN);
+			}
+			return user;
 		}
-		// Check if the pwd is correct
-		if (!user.getPwd().equals(pwd)) {
-			Log.info("pwd is incorrect.");
-			throw new WebApplicationException(Status.FORBIDDEN);
-		}
-		return user;
+
 	}
 
 	protected <T> T reTry(Supplier<T> func) {
