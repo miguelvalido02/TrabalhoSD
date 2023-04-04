@@ -47,7 +47,7 @@ public class UsersResource implements UsersService {
 		config.property(ClientProperties.READ_TIMEOUT, 5000);
 		config.property(ClientProperties.CONNECT_TIMEOUT, 5000);
 		client = ClientBuilder.newClient(config);
-		executor = Executors.newFixedThreadPool(20);
+		executor = Executors.newFixedThreadPool(50);
 	}
 
 	@Override
