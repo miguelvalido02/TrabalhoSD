@@ -5,8 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.List;
-import java.util.HashSet;
-import java.util.ArrayList;
+
 import java.util.logging.Logger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -19,6 +18,10 @@ import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.Response.Status;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.Message;
@@ -51,6 +54,7 @@ public class FeedsResource implements FeedsService {
     private Map<String, Set<String>> following; // <username,<user@domain>>
     private Map<String, Map<Long, Message>> feeds;// <username,<mid,message>>
     private Map<String, Map<String, List<String>>> followers; // <username,<domain,<user@domain>>>
+    private ExecutorService executor;
 
     public FeedsResource() {
         config = new ClientConfig();
@@ -60,6 +64,7 @@ public class FeedsResource implements FeedsService {
         this.following = new ConcurrentHashMap<String, Set<String>>();
         this.feeds = new ConcurrentHashMap<String, Map<Long, Message>>();
         this.followers = new ConcurrentHashMap<String, Map<String, List<String>>>();
+        executor = Executors.newFixedThreadPool(50);
     }
 
     @Override
@@ -76,22 +81,27 @@ public class FeedsResource implements FeedsService {
         msg.setCreationTime(System.currentTimeMillis());
         Log.info("post:" + user + msg);
         // post no proprio feed
+
         Map<Long, Message> userFeed = feeds.get(name);
         if (userFeed == null)
             feeds.put(name, userFeed = new ConcurrentHashMap<Long, Message>());
         userFeed.put(mid, msg);
 
-        Map<String, List<String>> userFollowers = followers.get(u.getName()); // domain <nomeUser, User>
+        Map<String, List<String>> userFollowers = null;
+        userFollowers = followers.get(u.getName()); // domain <nomeUser, User>
+
         if (userFollowers != null) {
             // colocar mensagens nos feeds dos users do mesmo dominio
             postInDomain(user, msg, userFollowers);
             // correr todos os seus seguidores e dar post no feed deles
             sendOutsideDomain(u, msg, userFollowers);
+
         }
         return mid;
     }
 
     private void postInDomain(String user, Message msg, Map<String, List<String>> userFollowers) {
+
         List<String> followersInDomain = userFollowers.get(Domain.getDomain());
         if (followersInDomain != null) {
             for (String follower : followersInDomain) {
@@ -102,9 +112,11 @@ public class FeedsResource implements FeedsService {
                     if (followerFeed == null)
                         feeds.put(name, followerFeed = new ConcurrentHashMap<Long, Message>());
                     followerFeed.put(msg.getId(), msg);
+
                 }
             }
         }
+
     }
 
     private void sendOutsideDomain(User u, Message msg, Map<String, List<String>> userFollowers) {
@@ -113,14 +125,12 @@ public class FeedsResource implements FeedsService {
         for (String domain : userFollowers.keySet()) {
             if (domain.equals(u.getDomain()))
                 continue;
-            Thread thread = new Thread(() -> {
+            executor.submit(() -> {
                 reTry(() -> {
                     requestPostOutsideDomain(domain, d, u.getName() + "@" + u.getDomain(), msg);
                     return null;
                 });
             });
-
-            thread.start();
         }
     }
 
@@ -145,6 +155,7 @@ public class FeedsResource implements FeedsService {
                     feeds.put(userName, feed = new ConcurrentHashMap<Long, Message>());
                 feed.put(msg.getId(), msg);
             }
+
         }
     }
 
@@ -158,6 +169,7 @@ public class FeedsResource implements FeedsService {
         if (feed == null || feed.get(mid) == null)
             throw new WebApplicationException(Status.NOT_FOUND);
         feed.remove(mid);
+
     }
 
     @Override
@@ -173,6 +185,7 @@ public class FeedsResource implements FeedsService {
                 if (userFeed == null || userFeed.get(mid) == null)
                     throw new WebApplicationException(Status.NOT_FOUND);// 404 message does not exist
                 return userFeed.get(mid);
+
             } else {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
@@ -206,11 +219,12 @@ public class FeedsResource implements FeedsService {
             if (Domain.getDomain().equals(domain)) {
                 // Verificar que o user existe
                 findUser(domain, name);
-
                 Map<Long, Message> userFeed = feeds.get(name);
                 if (userFeed == null)
-                    return new ArrayList<Message>();
-                return userFeed.values().stream().filter(m -> m.getCreationTime() > time).collect(Collectors.toList());
+                    return new CopyOnWriteArrayList<Message>();
+                return userFeed.values().stream().filter(m -> m.getCreationTime() > time)
+                        .collect(Collectors.toList());
+
             } else {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
@@ -254,8 +268,9 @@ public class FeedsResource implements FeedsService {
         if (domain.equals(Domain.getDomain())) {
             Set<String> userFollowing = following.get(name);
             if (userFollowing == null)
-                following.put(name, userFollowing = new HashSet<String>());
+                following.put(name, userFollowing = new CopyOnWriteArraySet<String>());
             userFollowing.add(userSub);
+
         }
         if (domainSub.equals(Domain.getDomain())) {
             Map<String, List<String>> subFollowers = followers.get(nameSub);
@@ -263,8 +278,9 @@ public class FeedsResource implements FeedsService {
                 followers.put(nameSub, subFollowers = new ConcurrentHashMap<String, List<String>>());
             List<String> followersInDomain = subFollowers.get(domain);
             if (followersInDomain == null)
-                subFollowers.put(domain, followersInDomain = new ArrayList<String>());
+                subFollowers.put(domain, followersInDomain = new CopyOnWriteArrayList<String>());
             followersInDomain.add(user);
+
         } else {
             reTry(() -> {// TODO thread
                 subOutside(domainSub, user, userSub, pwd);
@@ -308,6 +324,7 @@ public class FeedsResource implements FeedsService {
             if (userFollowing == null || !userFollowing.contains(userSub))
                 throw new WebApplicationException(Status.NOT_FOUND);// 404 if the userSub is not subscribed
             userFollowing.remove(userSub);
+
         }
         // User deixa de subscrever userSub
         if (Domain.getDomain().equals(domainSub)) {
@@ -317,6 +334,7 @@ public class FeedsResource implements FeedsService {
                     || !subFollowersInDomain.contains(user))
                 throw new WebApplicationException(Status.NOT_FOUND);// 404 if the userSub is not subscribed
             subFollowersInDomain.remove(user);
+
         } else {
             reTry(() -> {// TODO thread
                 unsubOutside(domainSub, user, userSub, pwd);
@@ -347,8 +365,9 @@ public class FeedsResource implements FeedsService {
         // Garantir que o user existe (pedido ao servico users)
         findUser(domain, name);
         if (following.get(name) == null)
-            return new ArrayList<String>();
-        return new ArrayList<String>(following.get(name));
+            return new CopyOnWriteArrayList<String>();
+        return new CopyOnWriteArrayList<String>(following.get(name));
+
     }
 
     @Override
@@ -360,17 +379,23 @@ public class FeedsResource implements FeedsService {
             Set<String> followings = following.get(user);
             if (followings != null) {
                 for (String sub : followings)
-                    unsubscribeUser(nameDomain, sub, pwd); // TODO pode ser mais eficiente
+                    executor.submit(() -> unsubscribeUser(nameDomain, sub, pwd)); // TODO pode ser mais eficiente
                 following.remove(user);
             }
 
-            Map<String, List<String>> userFollowers = followers.get(user);
+            Map<String, List<String>> userFollowers = null;
+
+            userFollowers = followers.get(user);
+
             if (userFollowers != null) {
                 // tirar os followings do proprio dominio
-                List<String> followersInDomain = userFollowers.get(Domain.getDomain());
+                List<String> followersInDomain = null;
+                followersInDomain = userFollowers.get(Domain.getDomain());
+
                 if (followersInDomain != null)
                     for (String follower : followersInDomain) {
                         String followerName = follower.split("@")[0];
+
                         Set<String> followingUserToDelete = following.get(followerName);
                         if (followingUserToDelete != null)
                             followingUserToDelete.remove(nameDomain);
@@ -382,19 +407,20 @@ public class FeedsResource implements FeedsService {
                 for (String followerDomain : userFollowers.keySet()) {
                     if (domain.equals(followerDomain))
                         continue;
-                    Thread thread = new Thread(() -> {
+                    executor.submit(() -> {
                         reTry(() -> {
                             requestDeleteOutsideDomain(user, domain, pwd, followerDomain, d);
                             return null;
                         });
                     });
-                    thread.start();
                 }
                 followers.remove(user);
             }
+
         } else {
             for (Set<String> followingList : following.values())
                 followingList.remove(nameDomain);
+
         }
     }
 

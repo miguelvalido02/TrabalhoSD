@@ -1,11 +1,10 @@
-package sd2223.trab1.clients;
+package sd2223.trab1.clients.rest;
 
 import java.net.URI;
 import java.util.List;
 
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.rest.FeedsService;
-
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.MediaType;

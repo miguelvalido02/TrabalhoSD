@@ -35,33 +35,19 @@ public class UsersResource implements UsersService {
 	private static final String FEEDS_SERVICE = "feeds";
 
 	private final Map<String, User> users = new ConcurrentHashMap<String, User>();
-	private final Map<String, User> users3 = new ConcurrentHashMap<String, User>();
 
 	private static Logger Log = Logger.getLogger(UsersResource.class.getName());
 
 	private Client client;
 	private ClientConfig config;
 	private ExecutorService executor;
-	private boolean locked;
 
 	public UsersResource() {
 		config = new ClientConfig();
 		config.property(ClientProperties.READ_TIMEOUT, 5000);
 		config.property(ClientProperties.CONNECT_TIMEOUT, 5000);
 		client = ClientBuilder.newClient(config);
-		executor = Executors.newFixedThreadPool(20);
-		this.locked = false;
-
-	}
-
-	private void execute() {
-		Log.severe("EXECUTE: ANTES SYNC");
-		synchronized (users) {
-			Log.severe("EXECUTE: DEPOIS SYNC");
-			while (locked)
-				;
-			locked = true;
-		}
+		executor = Executors.newFixedThreadPool(50);
 	}
 
 	@Override
@@ -81,7 +67,6 @@ public class UsersResource implements UsersService {
 				throw new WebApplicationException(Status.CONFLICT);
 			}
 		}
-		locked = false;
 		return user.getName() + "@" + user.getDomain();
 	}
 
@@ -92,7 +77,6 @@ public class UsersResource implements UsersService {
 		// execute();
 		Log.severe("getUser, depois do execute");
 		User u = checkUser(name, pwd);
-		locked = false;
 		return u;
 	}
 
@@ -120,7 +104,6 @@ public class UsersResource implements UsersService {
 				u.setDisplayName(displayName);
 			}
 		}
-		locked = false;
 		return u;
 	}
 
@@ -137,7 +120,6 @@ public class UsersResource implements UsersService {
 		});
 		synchronized (users) {
 			User u = users.remove(name);
-			locked = false;
 			return u;
 		}
 
@@ -165,7 +147,6 @@ public class UsersResource implements UsersService {
 					l.add(new User(user.getName(), "", user.getDomain(), user.getDisplayName()));
 			}
 		}
-		locked = false;
 		return l;
 	}
 

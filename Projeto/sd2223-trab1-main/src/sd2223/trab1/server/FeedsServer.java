@@ -24,10 +24,6 @@ public class FeedsServer {
 
     public static void main(String[] args) {
         try {
-            if (args.length != 1) {
-                System.err.println("Use: java trab1.server.FeedsServer domain");
-                return;
-            }
             String domain = args[0];
             Domain.setDomain(domain);
             ResourceConfig config = new ResourceConfig();
