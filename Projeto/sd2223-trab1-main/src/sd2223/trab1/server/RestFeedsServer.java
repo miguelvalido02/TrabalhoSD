@@ -25,7 +25,9 @@ public class FeedsServer {
     public static void main(String[] args) {
         try {
             String domain = args[0];
+            int seq = Integer.parseInt(args[1]);
             Domain.setDomain(domain);
+            Domain.setSeq(seq);
             ResourceConfig config = new ResourceConfig();
             config.register(FeedsResource.class);
 

@@ -90,4 +90,9 @@ public class RestClient {
         } catch (InterruptedException x) { // nothing to do...
         }
     }
+
+    @Override
+    public String toString() {
+        return serverURI.toString();
+    }
 }

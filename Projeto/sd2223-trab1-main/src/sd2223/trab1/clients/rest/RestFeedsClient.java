@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.List;
 
 import sd2223.trab1.api.Message;
+import sd2223.trab1.api.java.Feeds;
 import sd2223.trab1.api.rest.FeedsService;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.Response;
@@ -12,11 +13,11 @@ import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.Response.Status;
 
-public class RestFeedsClient extends RestClient implements FeedsService {
+public class RestFeedsClient extends RestClient implements Feeds {
 
     final WebTarget target;
 
-    RestFeedsClient(URI serverURI) {
+    public RestFeedsClient(URI serverURI) {
         super(serverURI);
         target = client.target(serverURI).path(FeedsService.PATH);
     }
@@ -83,9 +84,9 @@ public class RestFeedsClient extends RestClient implements FeedsService {
     private void clt_subUser(String user, String userSub, String pwd) {
         Response r = target.path("sub").path(user).path(userSub)
                 .queryParam(FeedsService.PWD, pwd).request()
-                .accept(MediaType.APPLICATION_JSON).post(Entity.json(null));
+                .post(Entity.json(null));
 
-        if (r.getStatus() == Status.OK.getStatusCode())// produz?
+        if (r.getStatus() == Status.OK.getStatusCode())
             System.out.println("Success subUser");
         else
             System.out.println("Error, HTTP error status: " + r.getStatus());
@@ -93,11 +94,9 @@ public class RestFeedsClient extends RestClient implements FeedsService {
 
     private void clt_unsubscribeUser(String user, String userSub, String pwd) {
         Response r = target.path("sub").path(user).path(userSub)
-                .queryParam(FeedsService.PWD, pwd).request()
-                .accept(MediaType.APPLICATION_JSON)
-                .delete();
+                .queryParam(FeedsService.PWD, pwd).request().delete();
 
-        if (r.getStatus() == Status.OK.getStatusCode()) // produz?
+        if (r.getStatus() == Status.OK.getStatusCode())
             System.out.println("Success unsubscribeUser");
         else
             System.out.println("Error, HTTP error status: " + r.getStatus());

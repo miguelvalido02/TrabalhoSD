@@ -3,7 +3,6 @@ package sd2223.trab1.server.resources;
 import java.net.URI;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.List;
 
 import java.util.logging.Logger;
@@ -55,6 +54,7 @@ public class FeedsResource implements FeedsService {
     private Map<String, Map<Long, Message>> feeds;// <username,<mid,message>>
     private Map<String, Map<String, List<String>>> followers; // <username,<domain,<user@domain>>>
     private ExecutorService executor;
+    private int counter;
 
     public FeedsResource() {
         config = new ClientConfig();
@@ -65,6 +65,7 @@ public class FeedsResource implements FeedsService {
         this.feeds = new ConcurrentHashMap<String, Map<Long, Message>>();
         this.followers = new ConcurrentHashMap<String, Map<String, List<String>>>();
         executor = Executors.newFixedThreadPool(50);
+        this.counter = 0;
     }
 
     @Override
@@ -75,8 +76,8 @@ public class FeedsResource implements FeedsService {
         if (!domain.equals(Domain.getDomain()))
             throw new WebApplicationException(Status.BAD_REQUEST);
         User u = verifyUser(name, domain, pwd);
-        UUID id = UUID.randomUUID();
-        long mid = id.getMostSignificantBits();
+        long mid = 256 * counter + Domain.getSeq();
+        counter++;
         msg.setId(mid);
         msg.setCreationTime(System.currentTimeMillis());
         Log.info("post:" + user + msg);
@@ -282,10 +283,10 @@ public class FeedsResource implements FeedsService {
             followersInDomain.add(user);
 
         } else {
-            reTry(() -> {// TODO thread
+            executor.submit(() -> reTry(() -> {
                 subOutside(domainSub, user, userSub, pwd);
                 return null;
-            });
+            }));
         }
     }
 
@@ -296,7 +297,7 @@ public class FeedsResource implements FeedsService {
             WebTarget target = client.target(userURI).path(FeedsService.PATH);
             target.path("sub").path(user).path(userSub)
                     .queryParam(FeedsService.PWD, pwd).request()
-                    .accept(MediaType.APPLICATION_JSON).post(Entity.json(null));
+                    .post(Entity.json(null));
         } catch (InterruptedException e) {
         }
     }
@@ -336,10 +337,10 @@ public class FeedsResource implements FeedsService {
             subFollowersInDomain.remove(user);
 
         } else {
-            reTry(() -> {// TODO thread
+            executor.submit(() -> reTry(() -> {
                 unsubOutside(domainSub, user, userSub, pwd);
                 return null;
-            });
+            }));
         }
     }
 
@@ -349,9 +350,7 @@ public class FeedsResource implements FeedsService {
             URI userURI = d.knownUrisOf(subDomain, FEEDS_SERVICE);
             WebTarget target = client.target(userURI).path(FeedsService.PATH);
             target.path("sub").path(user).path(userSub)
-                    .queryParam(FeedsService.PWD, pwd).request()
-                    .accept(MediaType.APPLICATION_JSON)
-                    .delete();
+                    .queryParam(FeedsService.PWD, pwd).request().delete();
         } catch (InterruptedException e) {
         }
     }

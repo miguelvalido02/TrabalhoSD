@@ -116,12 +116,12 @@ public class RestUsersClient extends RestClient implements Users {
     }
 
     @Override
-    public User updateUser(String name, String pwd, User user) {
+    public Result<User> updateUser(String name, String pwd, User user) {
         return super.reTry(() -> clt_updateUser(name, pwd, user));
     }
 
     @Override
-    public User deleteUser(String name, String pwd) {
+    public Result<User> deleteUser(String name, String pwd) {
         return super.reTry(() -> clt_deleteUser(name, pwd));
     }
 
@@ -131,13 +131,7 @@ public class RestUsersClient extends RestClient implements Users {
     }
 
     @Override
-    public User userExists(String name) {
+    public Result<User> userExists(String name) {
         return null;
-    }
-
-    @Override
-    public Result<Void> verifyPassword(String name, String pwd) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'verifyPassword'");
     }
 }
