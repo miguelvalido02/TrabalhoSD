@@ -9,7 +9,7 @@ import jakarta.jws.WebService;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.soap.UsersException;
 import sd2223.trab1.api.soap.UsersSoapService;
-
+import sd2223.trab1.api.java.Result;
 import sd2223.trab1.api.java.Users;
 
 @WebService(serviceName = UsersSoapService.NAME, targetNamespace = UsersSoapService.NAMESPACE, endpointInterface = UsersSoapService.INTERFACE)
@@ -18,48 +18,6 @@ public class UsersSoapResource implements Users {
 
     private static Logger Log = Logger.getLogger(UsersSoapResource.class.getName());
 
-    @Override
-    public String createUser(User user) throws UsersException {
-        Log.info("createUser : " + user);
-
-        // Check if user data is valid
-        if (user.getName() == null || user.getPwd() == null || user.getDisplayName() == null
-                || user.getDomain() == null) {
-            Log.info("User object invalid.");
-            return Result.error(ErrorCode.BAD_REQUEST);
-        }
-
-        // Insert user, checking if name already exists
-        if (users.putIfAbsent(user.getName(), user) != null) {
-            Log.info("User already exists.");
-            return Result.error(ErrorCode.CONFLICT);
-        }
-        return Result.ok(user.getName());
-    }
-
-    @Override
-    public User getUser(String name, String pwd) throws UsersException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getUser'");
-    }
-
-    @Override
-    public User updateUser(String name, String pwd, User user) throws UsersException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateUser'");
-    }
-
-    @Override
-    public User deleteUser(String name, String pwd) throws UsersException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteUser'");
-    }
-
-    @Override
-    public List<User> searchUsers(String pattern) throws UsersException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'searchUsers'");
-    }
 }
 /*
  * package aula5.servers.java;
