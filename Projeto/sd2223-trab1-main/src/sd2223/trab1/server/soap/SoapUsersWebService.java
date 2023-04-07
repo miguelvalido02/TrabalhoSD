@@ -47,4 +47,9 @@ public class SoapUsersWebService extends SoapWebService<UsersException> implemen
         return super.fromJavaResult(impl.searchUsers(pattern));
     }
 
+    @Override
+    public User userExists(String name) throws UsersException {
+        return super.fromJavaResult(impl.userExists(name));
+    }
+
 }
