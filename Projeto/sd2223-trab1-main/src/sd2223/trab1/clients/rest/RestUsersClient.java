@@ -60,13 +60,19 @@ public class RestUsersClient extends RestClient implements Users {
     }
 
     private Result<List<User>> clt_searchUsers(String pattern) {
-        List<User> users = null;
         Response r = target.path("/").queryParam(UsersService.QUERY, pattern).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
 
         return super.toJavaResult(r, new GenericType<List<User>>() {
         });
+    }
+
+    private Result<User> clt_userExists(String name) {
+        Response r = target.path("find").path(name)
+                .request().accept(MediaType.APPLICATION_JSON).get();
+
+        return super.toJavaResult(r, User.class);
     }
 
     @Override
@@ -96,6 +102,6 @@ public class RestUsersClient extends RestClient implements Users {
 
     @Override
     public Result<User> userExists(String name) {
-        return Result.ok(null);
+        return super.reTry(() -> clt_userExists(name));
     }
 }

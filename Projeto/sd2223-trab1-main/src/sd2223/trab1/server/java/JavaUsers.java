@@ -19,6 +19,7 @@ import java.net.URI;
 import sd2223.trab1.server.Domain;
 import sd2223.trab1.server.Discovery;
 import sd2223.trab1.api.rest.FeedsService;
+import sd2223.trab1.clients.FeedsClientFactory;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
@@ -114,13 +115,15 @@ public class JavaUsers implements Users {
 
 	}
 
-	private void deleteFeed(String name, String pwd) { // TODO o que ser isto no rest/soap
+	private void deleteFeed(String name, String pwd) {
 		try {
 			Discovery d = Discovery.getInstance();
 			URI userURI = d.knownUrisOf(Domain.getDomain(), FEEDS_SERVICE);
-			WebTarget target = client.target(userURI).path(FeedsService.PATH);
-			target.path("delete").path(name).path(Domain.getDomain()).queryParam(FeedsService.PWD, pwd).request()
-					.delete();
+			FeedsClientFactory.get(userURI).deleteFeed(name, Domain.getDomain(), pwd);
+			// WebTarget target = client.target(userURI).path(FeedsService.PATH);
+			// target.path("delete").path(name).path(Domain.getDomain()).queryParam(FeedsService.PWD,
+			// pwd).request()
+			// .delete();
 		} catch (InterruptedException e) {
 		}
 	}
@@ -128,7 +131,6 @@ public class JavaUsers implements Users {
 	@Override
 	public Result<List<User>> searchUsers(String pattern) {
 		List<User> l = new ArrayList<User>();
-		// execute();
 		synchronized (users) {
 			for (User user : users.values()) {
 				if (user.getName().contains(pattern))

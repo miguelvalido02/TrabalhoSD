@@ -82,7 +82,21 @@ public class RestFeedsClient extends RestClient implements Feeds {
 
         return super.toJavaResult(r, new GenericType<List<String>>() {
         });
+    }
 
+    private Result<Void> clt_postOutside(String user, Message msg) {
+        Response r = target.path(FeedsService.PATH).path("post")
+                .path(user).request().post(Entity.json(msg));
+
+        return super.toJavaResult(r, Void.class);
+    }
+
+    private Result<Void> clt_deleteFeed(String user, String domain, String pwd) {
+        Response r = target.path(FeedsService.PATH).path("delete")
+                .path(user).path(domain).queryParam(FeedsService.PWD, pwd)
+                .request().delete();
+
+        return super.toJavaResult(r, Void.class);
     }
 
     @Override
@@ -122,11 +136,11 @@ public class RestFeedsClient extends RestClient implements Feeds {
 
     @Override
     public Result<Void> postOutside(String user, Message msg) {
-        return Result.ok();
+        return super.reTry(() -> clt_postOutside(user, msg));
     }
 
     @Override
-    public Result<Void> deleteFeed(String user, String pwd, String domain) {
-        return Result.ok();
+    public Result<Void> deleteFeed(String user, String domain, String pwd) {
+        return super.reTry(() -> clt_deleteFeed(user, domain, pwd));
     }
 }

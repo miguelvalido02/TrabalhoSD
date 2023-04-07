@@ -57,7 +57,7 @@ public class SoapUsersClient extends SoapClient implements Users {
 
     @Override
     public Result<User> userExists(String name) {
-        return Result.ok(null);
+        return super.reTry(() -> super.toJavaResult(() -> stub().userExists(name)));
     }
 
 }

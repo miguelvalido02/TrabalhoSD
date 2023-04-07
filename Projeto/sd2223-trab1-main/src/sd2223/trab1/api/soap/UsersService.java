@@ -69,4 +69,7 @@ public interface UsersService {
      */
     @WebMethod
     List<User> searchUsers(String pattern) throws UsersException;
+
+    @WebMethod
+    User userExists(String name) throws UsersException;
 }

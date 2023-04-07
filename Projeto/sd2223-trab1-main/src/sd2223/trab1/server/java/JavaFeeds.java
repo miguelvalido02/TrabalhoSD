@@ -28,6 +28,8 @@ import sd2223.trab1.api.Message;
 import sd2223.trab1.server.Domain;
 import sd2223.trab1.server.Discovery;
 import sd2223.trab1.api.rest.UsersService;
+import sd2223.trab1.clients.FeedsClientFactory;
+import sd2223.trab1.clients.UsersClientFactory;
 import sd2223.trab1.api.rest.FeedsService;
 
 import org.glassfish.jersey.client.ClientConfig;
@@ -139,8 +141,10 @@ public class JavaFeeds implements Feeds {
         try {
             Log.info("entrei no requesPostOutside do dominio " + domain);
             URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
-            WebTarget target = client.target(userURI).path(FeedsService.PATH).path("post").path(user);
-            target.request().post(Entity.json(msg));
+            // WebTarget target =
+            // client.target(userURI).path(FeedsService.PATH).path("post").path(user);
+            // target.request().post(Entity.json(msg));
+            FeedsClientFactory.get(userURI).postOutside(user, msg);
         } catch (InterruptedException e) {
         }
     }
@@ -190,25 +194,30 @@ public class JavaFeeds implements Feeds {
             } else {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
-                WebTarget target = client.target(userURI).path(FeedsService.PATH);
-                Message m = reTry(() -> getMessage(target, user, mid));
-
-                return Result.ok(m);
+                // WebTarget target = client.target(userURI).path(FeedsService.PATH);
+                return FeedsClientFactory.get(userURI).getMessage(user, mid);
+                // Message m = reTry(() -> getMessage(target, user, mid));
+                // return Result.ok(m);
             }
         } catch (InterruptedException e) {
         }
         return null;
     }
 
-    private Message getMessage(WebTarget target, String user, Long mid) {
-        Response r = target.path(user).path(Long.toString(mid)).request().accept(MediaType.APPLICATION_JSON)
-                .get();
-        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
-            return r.readEntity(Message.class);// 200 OK
-        if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
-            throw new WebApplicationException(Status.NOT_FOUND);// 404 user or message does not exist
-        return null;
-    }
+    /*
+     * private Message getMessage(WebTarget target, String user, Long mid) {
+     * Response r =
+     * target.path(user).path(Long.toString(mid)).request().accept(MediaType.
+     * APPLICATION_JSON)
+     * .get();
+     * if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
+     * return r.readEntity(Message.class);// 200 OK
+     * if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
+     * throw new WebApplicationException(Status.NOT_FOUND);// 404 user or message
+     * does not exist
+     * return null;
+     * }
+     */
 
     @Override
     public Result<List<Message>> getMessages(String user, long time) {
@@ -229,26 +238,30 @@ public class JavaFeeds implements Feeds {
             } else {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
-                WebTarget target = client.target(userURI).path(FeedsService.PATH);
-                List<Message> l = reTry(() -> getMessages(target, user, time));
-                return Result.ok(l);
+                // WebTarget target = client.target(userURI).path(FeedsService.PATH);
+                // List<Message> l = reTry(() -> getMessages(target, user, time));
+                // return Result.ok(l);
+                return FeedsClientFactory.get(userURI).getMessages(user, time);
             }
         } catch (InterruptedException e) {
         }
         return null;
     }
 
-    private List<Message> getMessages(WebTarget target, String user, long time) {
-        Response r = target.path(user).queryParam(FeedsService.TIME, time).request()
-                .accept(MediaType.APPLICATION_JSON)
-                .get();
-        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
-            return r.readEntity(new GenericType<List<Message>>() {
-            });// 200 OK
-        if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
-            throw new WebApplicationException(Status.NOT_FOUND);// 404 user or message does not exist
-        return null;
-    }
+    /*
+     * private List<Message> getMessages(WebTarget target, String user, long time) {
+     * Response r = target.path(user).queryParam(FeedsService.TIME, time).request()
+     * .accept(MediaType.APPLICATION_JSON)
+     * .get();
+     * if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
+     * return r.readEntity(new GenericType<List<Message>>() {
+     * });// 200 OK
+     * if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
+     * throw new WebApplicationException(Status.NOT_FOUND);// 404 user or message
+     * does not exist
+     * return null;
+     * }
+     */
 
     @Override
     public Result<Void> subUser(String user, String userSub, String pwd) {
@@ -295,10 +308,11 @@ public class JavaFeeds implements Feeds {
         try {
             Discovery d = Discovery.getInstance();
             URI userURI = d.knownUrisOf(subDomain, FEEDS_SERVICE);
-            WebTarget target = client.target(userURI).path(FeedsService.PATH);
-            target.path("sub").path(user).path(userSub)
-                    .queryParam(FeedsService.PWD, pwd).request()
-                    .post(Entity.json(null));
+            // WebTarget target = client.target(userURI).path(FeedsService.PATH);
+            // target.path("sub").path(user).path(userSub)
+            // .queryParam(FeedsService.PWD, pwd).request()
+            // .post(Entity.json(null));
+            FeedsClientFactory.get(userURI).subUser(user, userSub, pwd);
         } catch (InterruptedException e) {
         }
     }
@@ -351,9 +365,10 @@ public class JavaFeeds implements Feeds {
         try {
             Discovery d = Discovery.getInstance();
             URI userURI = d.knownUrisOf(subDomain, FEEDS_SERVICE);
-            WebTarget target = client.target(userURI).path(FeedsService.PATH);
-            target.path("sub").path(user).path(userSub)
-                    .queryParam(FeedsService.PWD, pwd).request().delete();
+            // WebTarget target = client.target(userURI).path(FeedsService.PATH);
+            // target.path("sub").path(user).path(userSub)
+            // .queryParam(FeedsService.PWD, pwd).request().delete();
+            FeedsClientFactory.get(userURI).unsubscribeUser(user, userSub, pwd);
         } catch (InterruptedException e) {
         }
     }
@@ -432,9 +447,11 @@ public class JavaFeeds implements Feeds {
             Discovery d) {
         try {
             URI userURI = d.knownUrisOf(followerDomain, FEEDS_SERVICE);
-            WebTarget target = client.target(userURI).path(FeedsService.PATH);
-            target.path("delete").path(user).path(domain).queryParam(FeedsService.PWD, pwd)
-                    .request().accept(MediaType.APPLICATION_JSON).delete();
+            // WebTarget target = client.target(userURI).path(FeedsService.PATH);
+            // target.path("delete").path(user).path(domain).queryParam(FeedsService.PWD,
+            // pwd)
+            // .request().accept(MediaType.APPLICATION_JSON).delete();
+            FeedsClientFactory.get(userURI).deleteFeed(user, followerDomain, pwd);
         } catch (InterruptedException e) {
         }
     }
@@ -460,52 +477,63 @@ public class JavaFeeds implements Feeds {
         }
     }
 
-    private User findUser(String domain, String name) {
+    private Result<User> findUser(String domain, String name) {
         Discovery d = Discovery.getInstance();
         try {
             URI userURI = d.knownUrisOf(domain, USERS_SERVICE);
-            WebTarget target = client.target(userURI).path(UsersService.PATH);
-            return reTry(() -> findUser(name, domain, target, d));
+            // WebTarget target = client.target(userURI).path(UsersService.PATH);
+            // return reTry(() -> findUser(name, domain, target, d));
+            return UsersClientFactory.get(userURI).userExists(name);
         } catch (InterruptedException e) {
 
         }
         return null;
     }
 
-    private User findUser(String name, String domain, WebTarget target, Discovery d) {
-        Response r = target.path("find").path(name).request().accept(MediaType.APPLICATION_JSON).get();
-        if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
-            throw new WebApplicationException(Status.NOT_FOUND);// 404 user does not exist
-        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
-            return r.readEntity(User.class);
-        return null;
-    }
+    /*
+     * private User findUser(String name, String domain, WebTarget target, Discovery
+     * d) {
+     * Response r =
+     * target.path("find").path(name).request().accept(MediaType.APPLICATION_JSON).
+     * get();
+     * if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
+     * throw new WebApplicationException(Status.NOT_FOUND);// 404 user does not
+     * exist
+     * if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
+     * return r.readEntity(User.class);
+     * return null;
+     * }
+     */
 
     private User verifyUser(String name, String domain, String pwd) {
         try {
             Discovery d = Discovery.getInstance();
             URI userURI = d.knownUrisOf(domain, USERS_SERVICE);
-            WebTarget target = client.target(userURI).path(UsersService.PATH);
-            return reTry(() -> getUser(name, pwd, target));
+            // WebTarget target = client.target(userURI).path(UsersService.PATH);
+            // return reTry(() -> getUser(name, pwd, target));
+            return (User) UsersClientFactory.get(userURI).getUser(name, pwd);
         } catch (InterruptedException e) {
         }
         return null;
     }
 
-    private User getUser(String name, String pwd, WebTarget target) {
-        Response r = target.path(name)
-                .queryParam(UsersService.PWD, pwd).request()
-                .accept(MediaType.APPLICATION_JSON)
-                .get();
-
-        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
-            return r.readEntity(User.class);// 200 OK
-        else if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
-            throw new WebApplicationException(Status.NOT_FOUND);
-        else if (r.getStatus() == Status.FORBIDDEN.getStatusCode())
-            throw new WebApplicationException(Status.FORBIDDEN);// 403 pwd is wrong or user does not exist
-        else
-            throw new WebApplicationException(Status.BAD_REQUEST);// 400 otherwise
-    }
+    /*
+     * private User getUser(String name, String pwd, WebTarget target) {
+     * Response r = target.path(name)
+     * .queryParam(UsersService.PWD, pwd).request()
+     * .accept(MediaType.APPLICATION_JSON)
+     * .get();
+     * 
+     * if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
+     * return r.readEntity(User.class);// 200 OK
+     * else if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
+     * throw new WebApplicationException(Status.NOT_FOUND);
+     * else if (r.getStatus() == Status.FORBIDDEN.getStatusCode())
+     * throw new WebApplicationException(Status.FORBIDDEN);// 403 pwd is wrong or
+     * user does not exist
+     * else
+     * throw new WebApplicationException(Status.BAD_REQUEST);// 400 otherwise
+     * }
+     */
 
 }
