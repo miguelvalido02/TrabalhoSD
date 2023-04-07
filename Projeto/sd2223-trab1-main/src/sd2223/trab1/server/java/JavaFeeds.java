@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import jakarta.inject.Singleton;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;

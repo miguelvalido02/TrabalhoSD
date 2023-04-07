@@ -41,16 +41,8 @@ public class RestUsersResource extends RestResource implements UsersService {
 		return super.fromJavaResult(impl.deleteUser(name, pwd));
 	}
 
-	private void deleteFeed(String name, String pwd) {
-		// manhoso
-	}
-
 	@Override
 	public List<User> searchUsers(String pattern) {
 		return super.fromJavaResult(impl.searchUsers(pattern));
-	}
-
-	private User checkUser(String name, String pwd) {
-		return null;
 	}
 }

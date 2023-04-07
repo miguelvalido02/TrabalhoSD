@@ -5,6 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jakarta.xml.ws.Endpoint;
+import sd2223.trab1.server.soap.SoapUsersWebService;
 
 public class SoapUsersServer {
 
