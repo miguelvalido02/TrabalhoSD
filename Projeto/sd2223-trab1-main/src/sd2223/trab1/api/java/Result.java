@@ -22,7 +22,7 @@ public interface Result<T> {
      * INTERNAL_ERROR - something unexpected happened
      */
     enum ErrorCode {
-        OK, CONFLICT, NOT_FOUND, BAD_REQUEST, FORBIDDEN, INTERNAL_ERROR, NOT_IMPLEMENTED, TIMEOUT, WRONG_MID
+        OK, CONFLICT, NOT_FOUND, BAD_REQUEST, FORBIDDEN, INTERNAL_ERROR, NOT_IMPLEMENTED, TIMEOUT
     };
 
     /**

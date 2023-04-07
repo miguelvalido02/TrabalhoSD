@@ -29,71 +29,50 @@ public class SoapFeedsClient extends SoapClient implements Feeds {
         }
         return stub;
     }
-    /*
-     * @Override
-     * public Result<String> createUser(User user) {
-     * return super.reTry(() -> super.toJavaResult(() -> stub().createUser(user)));
-     * }
-     * 
-     * @Override
-     * public Result<User> getUser(String name, String pwd) {
-     * return super.reTry(() -> super.toJavaResult(() -> stub().getUser(name,
-     * pwd)));
-     * }
-     */
 
     @Override
     public Result<Long> postMessage(String user, String pwd, Message msg) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'postMessage'");
+        return super.reTry(() -> super.toJavaResult(() -> stub().postMessage(user, pwd, msg)));
     }
 
     @Override
     public Result<Void> postOutside(String user, Message msg) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'postOutside'");
+        return Result.ok();
     }
 
     @Override
     public Result<Void> removeFromPersonalFeed(String user, long mid, String pwd) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'removeFromPersonalFeed'");
+        return super.reTry(() -> super.toJavaResult(() -> stub().removeFromPersonalFeed(user, mid, pwd)));
     }
 
     @Override
     public Result<Message> getMessage(String user, long mid) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getMessage'");
+        return super.reTry(() -> super.toJavaResult(() -> stub().getMessage(user, mid)));
     }
 
     @Override
     public Result<List<Message>> getMessages(String user, long time) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getMessages'");
+        return super.reTry(() -> super.toJavaResult(() -> stub().getMessages(user, time)));
     }
 
     @Override
     public Result<Void> subUser(String user, String userSub, String pwd) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'subUser'");
+        return super.reTry(() -> super.toJavaResult(() -> stub().subUser(user, userSub, pwd)));
     }
 
     @Override
     public Result<Void> unsubscribeUser(String user, String userSub, String pwd) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'unsubscribeUser'");
+        return super.reTry(() -> super.toJavaResult(() -> stub().unsubscribeUser(user, userSub, pwd)));
     }
 
     @Override
     public Result<List<String>> listSubs(String user) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'listSubs'");
+        return super.reTry(() -> super.toJavaResult(() -> stub().listSubs(user)));
     }
 
     @Override
     public Result<Void> deleteFeed(String user, String domain, String pwd) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteFeed'");
+        return Result.ok();
     }
 
 }

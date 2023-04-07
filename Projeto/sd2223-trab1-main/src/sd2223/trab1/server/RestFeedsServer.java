@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import sd2223.trab1.server.rest.FeedsResource;
+import sd2223.trab1.server.rest.RestFeedsResource;
 
 public class RestFeedsServer {
 
@@ -29,7 +29,7 @@ public class RestFeedsServer {
             Domain.setDomain(domain);
             Domain.setSeq(seq);
             ResourceConfig config = new ResourceConfig();
-            config.register(FeedsResource.class);
+            config.register(RestFeedsResource.class);
 
             String ip = InetAddress.getLocalHost().getHostAddress();
             String serverURI = String.format(SERVER_URI_FMT, ip, PORT);

@@ -30,25 +30,16 @@ public class RestFeedsClient extends RestClient implements Feeds {
                 .queryParam(FeedsService.PWD, pwd).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .post(Entity.json(msg));
-        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
-            System.out.println("Success");
-            return Result.ok(r.readEntity(Long.class));
-        } else
-            System.out.println("Error, HTTP error status: " + r.getStatus());
 
-        return Result.error(ErrorCode.WRONG_MID); // manhoso
+        return super.toJavaResult(r, Long.class);
     }
 
     private Result<Void> clt_removeFromPersonalFeed(String user, long mid, String pwd) {
-        Response r = target.path(user).path(Long.toString(mid)).queryParam(FeedsService.PWD, pwd).request().delete();
+        Response r = target.path(user)
+                .path(Long.toString(mid)).queryParam(FeedsService.PWD, pwd)
+                .request().delete();
 
-        if (r.getStatus() == Status.OK.getStatusCode())
-            System.out.println("Success removing from personal feed");
-
-        else
-            System.out.println("Error, HTTP error status: " + r.getStatus());
-
-        return null;
+        return super.toJavaResult(r, Void.class);
     }
 
     private Result<Message> clt_getMessage(String user, long mid) {
@@ -56,31 +47,16 @@ public class RestFeedsClient extends RestClient implements Feeds {
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
 
-        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
-            System.out.println("Success:");
-            return Result.ok(r.readEntity(Message.class));
-        } else
-            System.out.println("Error, HTTP error status: " + r.getStatus());
-
-        return null;
-
+        return super.toJavaResult(r, Message.class);
     }
 
     private Result<List<Message>> clt_getMessages(String user, long time) {
-        List<Message> messages = null;
         Response r = target.path(user)
                 .queryParam(FeedsService.TIME, time).request()
                 .accept(MediaType.APPLICATION_JSON).get();
 
-        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
-            messages = r.readEntity(new GenericType<List<Message>>() {
-            });
-            System.out.println("Success: (" + messages.size() + " users)");
-            messages.stream().forEach(m -> System.out.println(m));
-        } else
-            System.out.println("Error, HTTP error status: " + r.getStatus());
-
-        return Result.ok(messages);
+        return super.toJavaResult(r, new GenericType<List<Message>>() {
+        });
 
     }
 
@@ -89,50 +65,34 @@ public class RestFeedsClient extends RestClient implements Feeds {
                 .queryParam(FeedsService.PWD, pwd).request()
                 .post(Entity.json(null));
 
-        if (r.getStatus() == Status.OK.getStatusCode())
-            System.out.println("Success subUser");
-        else
-            System.out.println("Error, HTTP error status: " + r.getStatus());
-
-        return Result.ok(); // manhoso
+        return super.toJavaResult(r, Void.class);
     }
 
     private Result<Void> clt_unsubscribeUser(String user, String userSub, String pwd) {
         Response r = target.path("sub").path(user).path(userSub)
                 .queryParam(FeedsService.PWD, pwd).request().delete();
 
-        if (r.getStatus() == Status.OK.getStatusCode())
-            System.out.println("Success unsubscribeUser");
-        else
-            System.out.println("Error, HTTP error status: " + r.getStatus());
-
-        return Result.ok(); // manhoso
+        return super.toJavaResult(r, Void.class);
     }
 
     private Result<List<String>> clt_listSubs(String user) {
-        List<String> users = null;
         Response r = target.path("sub").path("list").path(user).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
 
-        if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity()) {
-            users = r.readEntity(new GenericType<List<String>>() {
-            });
-            System.out.println("Success: (" + users.size() + " users)");
-            users.stream().forEach(u -> System.out.println(u));
-        } else
-            System.out.println("Error, HTTP error status: " + r.getStatus());
+        return super.toJavaResult(r, new GenericType<List<String>>() {
+        });
 
-        return Result.ok(users);
+    }
+
+    @Override
+    public Result<Long> postMessage(String user, String pwd, Message msg) {
+        return super.reTry(() -> clt_postMessage(user, pwd, msg));
     }
 
     @Override
     public Result<Void> removeFromPersonalFeed(String user, long mid, String pwd) {
-        super.reTry(() -> {
-            clt_removeFromPersonalFeed(user, mid, pwd);
-            return null;
-        });
-        return Result.ok(); // manhoso
+        return super.reTry(() -> clt_removeFromPersonalFeed(user, mid, pwd));
     }
 
     @Override
@@ -147,20 +107,12 @@ public class RestFeedsClient extends RestClient implements Feeds {
 
     @Override
     public Result<Void> subUser(String user, String userSub, String pwd) {
-        super.reTry(() -> {
-            clt_subUser(user, userSub, pwd);
-            return null;
-        });
-        return Result.ok(); // manhoso
+        return super.reTry(() -> clt_subUser(user, userSub, pwd));
     }
 
     @Override
     public Result<Void> unsubscribeUser(String user, String userSub, String pwd) {
-        super.reTry(() -> {
-            clt_unsubscribeUser(user, userSub, pwd);
-            return null;
-        });
-        return null; // manhoso
+        return super.reTry(() -> clt_unsubscribeUser(user, userSub, pwd));
     }
 
     @Override
@@ -170,17 +122,11 @@ public class RestFeedsClient extends RestClient implements Feeds {
 
     @Override
     public Result<Void> postOutside(String user, Message msg) {
-        return null; // manhoso
+        return Result.ok();
     }
 
     @Override
     public Result<Void> deleteFeed(String user, String pwd, String domain) {
-        return Result.ok(); // manhoso
+        return Result.ok();
     }
-
-    @Override
-    public Result<Long> postMessage(String user, String pwd, Message msg) {
-        return super.reTry(() -> clt_postMessage(user, pwd, msg));
-    }
-
 }
