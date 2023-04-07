@@ -1,4 +1,4 @@
-package sd2223.trab1.server.resources;
+package sd2223.trab1.server.java;
 
 import java.net.URI;
 import java.util.Map;
@@ -23,6 +23,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import sd2223.trab1.api.User;
+import sd2223.trab1.api.java.Feeds;
+import sd2223.trab1.api.java.Result;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.server.Domain;
 import sd2223.trab1.server.Discovery;
@@ -37,10 +39,9 @@ import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.WebApplicationException;
 
-// Implementa FeedsService
-@Singleton
-public class FeedsResource implements FeedsService {
-    private static Logger Log = Logger.getLogger(FeedsResource.class.getName());
+public class JavaFeeds implements Feeds {
+
+    private static Logger Log = Logger.getLogger(JavaFeeds.class.getName());
 
     private static final int MAX_RETRIES = 10;
     private static final int RETRY_SLEEP = 500;
@@ -56,7 +57,7 @@ public class FeedsResource implements FeedsService {
     private ExecutorService executor;
     private int counter;
 
-    public FeedsResource() {
+    public JavaFeeds() {
         config = new ClientConfig();
         config.property(ClientProperties.READ_TIMEOUT, 5000);
         config.property(ClientProperties.CONNECT_TIMEOUT, 5000);
@@ -69,7 +70,7 @@ public class FeedsResource implements FeedsService {
     }
 
     @Override
-    public long postMessage(String user, String pwd, Message msg) {
+    public Result<Long> postMessage(String user, String pwd, Message msg) {
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
@@ -98,7 +99,7 @@ public class FeedsResource implements FeedsService {
             sendOutsideDomain(u, msg, userFollowers);
 
         }
-        return mid;
+        return Result.ok(mid);
     }
 
     private void postInDomain(String user, Message msg, Map<String, List<String>> userFollowers) {
@@ -146,7 +147,7 @@ public class FeedsResource implements FeedsService {
     }
 
     @Override
-    public void postOutside(String user, Message msg) {
+    public Result<Void> postOutside(String user, Message msg) {
         for (Map.Entry<String, Set<String>> entry : following.entrySet()) {
             String userName = entry.getKey();
             Set<String> followingList = entry.getValue();
@@ -156,12 +157,12 @@ public class FeedsResource implements FeedsService {
                     feeds.put(userName, feed = new ConcurrentHashMap<Long, Message>());
                 feed.put(msg.getId(), msg);
             }
-
         }
+        return Result.ok();
     }
 
     @Override
-    public void removeFromPersonalFeed(String user, long mid, String pwd) {
+    public Result<Void> removeFromPersonalFeed(String user, long mid, String pwd) {
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
@@ -170,11 +171,11 @@ public class FeedsResource implements FeedsService {
         if (feed == null || feed.get(mid) == null)
             throw new WebApplicationException(Status.NOT_FOUND);
         feed.remove(mid);
-
+        return Result.ok();
     }
 
     @Override
-    public Message getMessage(String user, long mid) {
+    public Result<Message> getMessage(String user, long mid) {
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
@@ -185,7 +186,7 @@ public class FeedsResource implements FeedsService {
                 Map<Long, Message> userFeed = feeds.get(name);
                 if (userFeed == null || userFeed.get(mid) == null)
                     throw new WebApplicationException(Status.NOT_FOUND);// 404 message does not exist
-                return userFeed.get(mid);
+                return Result.ok(userFeed.get(mid));
 
             } else {
                 Discovery d = Discovery.getInstance();
@@ -193,7 +194,7 @@ public class FeedsResource implements FeedsService {
                 WebTarget target = client.target(userURI).path(FeedsService.PATH);
                 Message m = reTry(() -> getMessage(target, user, mid));
 
-                return m;
+                return Result.ok(m);
             }
         } catch (InterruptedException e) {
         }
@@ -211,7 +212,7 @@ public class FeedsResource implements FeedsService {
     }
 
     @Override
-    public List<Message> getMessages(String user, long time) {
+    public Result<List<Message>> getMessages(String user, long time) {
         Log.info("getMessages:" + user + " time: " + time + " currentTime: " + System.currentTimeMillis());
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
@@ -222,16 +223,16 @@ public class FeedsResource implements FeedsService {
                 findUser(domain, name);
                 Map<Long, Message> userFeed = feeds.get(name);
                 if (userFeed == null)
-                    return new CopyOnWriteArrayList<Message>();
-                return userFeed.values().stream().filter(m -> m.getCreationTime() > time)
-                        .collect(Collectors.toList());
+                    return Result.ok(new CopyOnWriteArrayList<Message>());
+                return Result.ok(userFeed.values().stream().filter(m -> m.getCreationTime() > time)
+                        .collect(Collectors.toList()));
 
             } else {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
                 WebTarget target = client.target(userURI).path(FeedsService.PATH);
                 List<Message> l = reTry(() -> getMessages(target, user, time));
-                return l;
+                return Result.ok(l);
             }
         } catch (InterruptedException e) {
         }
@@ -251,7 +252,7 @@ public class FeedsResource implements FeedsService {
     }
 
     @Override
-    public void subUser(String user, String userSub, String pwd) {
+    public Result<Void> subUser(String user, String userSub, String pwd) {
         Log.info("subUser:" + user + " sub:" + userSub);
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
@@ -288,6 +289,7 @@ public class FeedsResource implements FeedsService {
                 return null;
             }));
         }
+        return Result.ok();
     }
 
     private void subOutside(String subDomain, String user, String userSub, String pwd) {
@@ -303,7 +305,7 @@ public class FeedsResource implements FeedsService {
     }
 
     @Override
-    public void unsubscribeUser(String user, String userSub, String pwd) {
+    public Result<Void> unsubscribeUser(String user, String userSub, String pwd) {
         Log.info("unsub: " + user + " sub: " + userSub);
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
@@ -342,6 +344,8 @@ public class FeedsResource implements FeedsService {
                 return null;
             }));
         }
+
+        return Result.ok();
     }
 
     private void unsubOutside(String subDomain, String user, String userSub, String pwd) {
@@ -356,7 +360,7 @@ public class FeedsResource implements FeedsService {
     }
 
     @Override
-    public List<String> listSubs(String user) {
+    public Result<List<String>> listSubs(String user) {
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
@@ -364,13 +368,13 @@ public class FeedsResource implements FeedsService {
         // Garantir que o user existe (pedido ao servico users)
         findUser(domain, name);
         if (following.get(name) == null)
-            return new CopyOnWriteArrayList<String>();
-        return new CopyOnWriteArrayList<String>(following.get(name));
+            return Result.ok(new CopyOnWriteArrayList<String>());
+        return Result.ok(new CopyOnWriteArrayList<String>(following.get(name)));
 
     }
 
     @Override
-    public void deleteFeed(String user, String domain, String pwd) {
+    public Result<Void> deleteFeed(String user, String domain, String pwd) {
         String nameDomain = user + "@" + domain;
         if (domain.equals(Domain.getDomain())) {
             feeds.remove(user);
@@ -421,6 +425,8 @@ public class FeedsResource implements FeedsService {
                 followingList.remove(nameDomain);
 
         }
+
+        return Result.ok();
     }
 
     private void requestDeleteOutsideDomain(String user, String domain, String pwd, String followerDomain,

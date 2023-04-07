@@ -7,11 +7,11 @@ import java.util.logging.Logger;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import sd2223.trab1.server.resources.UsersResource;
+import sd2223.trab1.server.rest.RestUsersResource;
 
-public class UsersServer {
+public class RestUsersServer {
 
-	private static Logger Log = Logger.getLogger(UsersServer.class.getName());
+	private static Logger Log = Logger.getLogger(RestUsersServer.class.getName());
 
 	static {
 		System.setProperty("java.net.preferIPv4Stack", "true");
@@ -27,7 +27,7 @@ public class UsersServer {
 			String domain = args[0];
 			Domain.setDomain(domain);
 			ResourceConfig config = new ResourceConfig();
-			config.register(UsersResource.class);
+			config.register(RestUsersResource.class);
 
 			String ip = InetAddress.getLocalHost().getHostAddress();
 			String serverURI = String.format(SERVER_URI_FMT, ip, PORT);

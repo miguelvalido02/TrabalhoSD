@@ -6,8 +6,8 @@ import jakarta.jws.WebMethod;
 import jakarta.jws.WebService;
 import sd2223.trab1.api.Message;
 
-@WebService(serviceName = FeedsSoapService.NAME, targetNamespace = FeedsSoapService.NAMESPACE, endpointInterface = FeedsSoapService.INTERFACE)
-public interface FeedsSoapService {
+@WebService(serviceName = FeedsService.NAME, targetNamespace = FeedsService.NAMESPACE, endpointInterface = FeedsService.INTERFACE)
+public interface FeedsService {
 
     static final String NAME = "feeds";
     static final String NAMESPACE = "http://sd2223";

@@ -1,4 +1,4 @@
-package sd2223.trab1.server.resources;
+package sd2223.trab1.server.rest;
 
 import sd2223.trab1.api.java.Result;
 import jakarta.ws.rs.WebApplicationException;

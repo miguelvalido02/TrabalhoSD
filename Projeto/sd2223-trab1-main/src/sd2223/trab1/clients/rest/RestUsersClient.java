@@ -53,7 +53,7 @@ public class RestUsersClient extends RestClient implements Users {
         return super.toJavaResult(r, User.class);
     }
 
-    private User clt_updateUser(String name, String pwd, User user) {
+    private Result<User> clt_updateUser(String name, String pwd, User user) {
         User u = null;
         Response r = target.path(name)
                 .queryParam(UsersService.PWD, pwd).request()
@@ -67,11 +67,11 @@ public class RestUsersClient extends RestClient implements Users {
         } else
             System.out.println("Error, HTTP error status: " + r.getStatus());
 
-        return u;
+        return super.toJavaResult(r, User.class);
 
     }
 
-    private User clt_deleteUser(String name, String pwd) {
+    private Result<User> clt_deleteUser(String name, String pwd) {
         User u = null;
         Response r = target.path(name)
                 .queryParam(UsersService.PWD, pwd).request()
@@ -84,11 +84,11 @@ public class RestUsersClient extends RestClient implements Users {
         } else
             System.out.println("Error, HTTP error status: " + r.getStatus());
 
-        return u;
+        return super.toJavaResult(r, User.class);
 
     }
 
-    private List<User> clt_searchUsers(String pattern) {
+    private Result<List<User>> clt_searchUsers(String pattern) {
         List<User> users = null;
         Response r = target.path("/").queryParam(UsersService.QUERY, pattern).request()
                 .accept(MediaType.APPLICATION_JSON)
@@ -102,7 +102,7 @@ public class RestUsersClient extends RestClient implements Users {
         } else
             System.out.println("Error, HTTP error status: " + r.getStatus());
 
-        return users;
+        return Result.ok(users); // como fazer com List<User>?
     }
 
     @Override
@@ -126,12 +126,12 @@ public class RestUsersClient extends RestClient implements Users {
     }
 
     @Override
-    public List<User> searchUsers(String pattern) {
+    public Result<List<User>> searchUsers(String pattern) {
         return super.reTry(() -> clt_searchUsers(pattern));
     }
 
     @Override
     public Result<User> userExists(String name) {
-        return null;
+        return Result.ok();
     }
 }

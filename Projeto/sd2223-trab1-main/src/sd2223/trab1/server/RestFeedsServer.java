@@ -7,11 +7,11 @@ import java.util.logging.Logger;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import sd2223.trab1.server.resources.FeedsResource;
+import sd2223.trab1.server.rest.FeedsResource;
 
-public class FeedsServer {
+public class RestFeedsServer {
 
-    private static Logger Log = Logger.getLogger(FeedsServer.class.getName());
+    private static Logger Log = Logger.getLogger(RestFeedsServer.class.getName());
 
     static {
         System.setProperty("java.net.preferIPv4Stack", "true");
