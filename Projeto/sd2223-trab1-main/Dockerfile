@@ -1,6 +1,6 @@
 # base ubuntu official image 
-FROM ubuntu
-
+#FROM ubuntu
+FROM nunopreguica/sd2223tpbase
 # run a command (install a package)
 RUN apt-get update && apt-get install iproute2 -y
 
