@@ -37,7 +37,7 @@ public class SoapFeedsClient extends SoapClient implements Feeds {
 
     @Override
     public Result<Void> postOutside(String user, Message msg) {
-        return Result.ok();
+        return super.reTry(() -> super.toJavaResult(() -> stub().postOutside(user, msg)));
     }
 
     @Override
@@ -72,7 +72,7 @@ public class SoapFeedsClient extends SoapClient implements Feeds {
 
     @Override
     public Result<Void> deleteFeed(String user, String domain, String pwd) {
-        return Result.ok();
+        return super.reTry(() -> super.toJavaResult(() -> stub().deleteFeed(user, domain, pwd)));
     }
 
 }

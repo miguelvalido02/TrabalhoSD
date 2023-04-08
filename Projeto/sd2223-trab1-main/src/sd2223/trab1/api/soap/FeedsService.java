@@ -114,4 +114,10 @@ public interface FeedsService {
      */
     @WebMethod
     List<String> listSubs(String user) throws FeedsException;
+
+    @WebMethod
+    void deleteFeed(String user, String domain, String pwd) throws FeedsException;
+
+    @WebMethod
+    void postOutside(String user, Message msg) throws FeedsException;
 }

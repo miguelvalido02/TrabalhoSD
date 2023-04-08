@@ -82,14 +82,14 @@ public class RestFeedsClient extends RestClient implements Feeds {
     }
 
     private Result<Void> clt_postOutside(String user, Message msg) {
-        Response r = target.path(FeedsService.PATH).path("post")
+        Response r = target.path("post")
                 .path(user).request().post(Entity.json(msg));
 
         return super.toJavaResult(r, Void.class);
     }
 
     private Result<Void> clt_deleteFeed(String user, String domain, String pwd) {
-        Response r = target.path(FeedsService.PATH).path("delete")
+        Response r = target.path("delete")
                 .path(user).path(domain).queryParam(FeedsService.PWD, pwd)
                 .request().delete();
 

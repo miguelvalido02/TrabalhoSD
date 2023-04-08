@@ -18,23 +18,23 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.net.URI;
 import sd2223.trab1.server.Domain;
 import sd2223.trab1.server.Discovery;
-import sd2223.trab1.api.rest.FeedsService;
+//import sd2223.trab1.api.rest.FeedsService;
 import sd2223.trab1.clients.FeedsClientFactory;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 
 import jakarta.inject.Singleton;
-import jakarta.ws.rs.client.WebTarget;
+//import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.Response.Status;
-import jakarta.xml.ws.WebServiceException;
+/*import jakarta.xml.ws.WebServiceException;
 import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.ClientBuilder;*/
 
 @Singleton
 public class JavaUsers implements Users {
-	private static final int MAX_RETRIES = 10;
-	private static final int RETRY_SLEEP = 500;
+	// private static final int MAX_RETRIES = 10;
+	// private static final int RETRY_SLEEP = 500;
 
 	private static final String FEEDS_SERVICE = "feeds";
 
@@ -42,7 +42,7 @@ public class JavaUsers implements Users {
 
 	private static Logger Log = Logger.getLogger(JavaUsers.class.getName());
 
-	private Client client;
+	// private Client client;
 	private ClientConfig config;
 	private ExecutorService executor;
 
@@ -50,7 +50,7 @@ public class JavaUsers implements Users {
 		config = new ClientConfig();
 		config.property(ClientProperties.READ_TIMEOUT, 5000);
 		config.property(ClientProperties.CONNECT_TIMEOUT, 5000);
-		client = ClientBuilder.newClient(config);
+		// client = ClientBuilder.newClient(config);
 		executor = Executors.newFixedThreadPool(50);
 	}
 
@@ -111,12 +111,7 @@ public class JavaUsers implements Users {
 	public Result<User> deleteUser(String name, String pwd) {
 		Result<User> us = checkUser(name, pwd);
 		if (us.isOK()) {
-			executor.submit(() -> {
-				reTry(() -> {
-					deleteFeed(name, pwd);
-					return null;
-				});
-			});
+			executor.submit(() -> deleteFeed(name, pwd));
 			synchronized (users) {
 				User u = users.remove(name);
 				return Result.ok(u);
@@ -176,30 +171,31 @@ public class JavaUsers implements Users {
 
 	}
 
-	protected <T> Result<T> reTry(ResultSupplier<Result<T>> func) {
-		for (int i = 0; i < MAX_RETRIES; i++)
-			try {
-				return func.get();
-			} catch (WebServiceException x) {
-				x.printStackTrace();
-				Log.fine("Timeout: " + x.getMessage());
-				sleep_ms(RETRY_SLEEP);
-			} catch (Exception x) {
-				x.printStackTrace();
-				return Result.error(ErrorCode.INTERNAL_ERROR);
-			}
-		return Result.error(ErrorCode.TIMEOUT);
-	}
-
-	static interface ResultSupplier<T> {
-		T get() throws Exception;
-	}
-
-	private void sleep_ms(int ms) {
-		try {
-			Thread.sleep(ms);
-		} catch (InterruptedException e) {
-		}
-	}
-
+	/*
+	 * protected <T> Result<T> reTry(ResultSupplier<Result<T>> func) {
+	 * for (int i = 0; i < MAX_RETRIES; i++)
+	 * try {
+	 * return func.get();
+	 * } catch (WebServiceException x) {
+	 * x.printStackTrace();
+	 * Log.fine("Timeout: " + x.getMessage());
+	 * sleep_ms(RETRY_SLEEP);
+	 * } catch (Exception x) {
+	 * x.printStackTrace();
+	 * return Result.error(ErrorCode.INTERNAL_ERROR);
+	 * }
+	 * return Result.error(ErrorCode.TIMEOUT);
+	 * }
+	 * 
+	 * static interface ResultSupplier<T> {
+	 * T get() throws Exception;
+	 * }
+	 * 
+	 * private void sleep_ms(int ms) {
+	 * try {
+	 * Thread.sleep(ms);
+	 * } catch (InterruptedException e) {
+	 * }
+	 * }
+	 */
 }
