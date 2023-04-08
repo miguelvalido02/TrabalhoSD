@@ -59,12 +59,14 @@ public class JavaUsers implements Users {
 		if (user == null || user.getDisplayName() == null || user.getPwd() == null || user.getName() == null ||
 				user.getDomain() == null) {
 			Log.info("User object invalid.");
-			throw new WebApplicationException(Status.BAD_REQUEST);
+			// throw new WebApplicationException(Status.BAD_REQUEST);
+			return Result.error(ErrorCode.BAD_REQUEST);
 		}
 		synchronized (users) {
 			if (users.putIfAbsent(user.getName(), user) != null) {
 				Log.info("User already exists.");
-				throw new WebApplicationException(Status.CONFLICT);
+				// throw new WebApplicationException(Status.CONFLICT);
+				return Result.error(ErrorCode.CONFLICT);
 			}
 		}
 		return Result.ok(user.getName() + "@" + user.getDomain());
@@ -72,7 +74,7 @@ public class JavaUsers implements Users {
 
 	@Override
 	public Result<User> getUser(String name, String pwd) {
-		return Result.ok(checkUser(name, pwd));
+		return checkUser(name, pwd);
 	}
 
 	@Override
@@ -86,33 +88,41 @@ public class JavaUsers implements Users {
 
 	@Override
 	public Result<User> updateUser(String name, String oldPwd, User user) {
-
-		User u = checkUser(name, oldPwd);
-		synchronized (users) {
-			if (u != null) {
-				String pwd = user.getPwd() == null ? oldPwd : user.getPwd();
-				u.setPwd(pwd);
-				String displayName = user.getDisplayName() == null ? u.getDisplayName() : user.getDisplayName();
-				u.setDisplayName(displayName);
+		Log.info("UpdateUser: name: " + name + " , pwd: " + oldPwd + " User: " + user);
+		Result<User> u = checkUser(name, oldPwd);
+		if (!name.equals(user.getName()))
+			return Result.error(ErrorCode.BAD_REQUEST);
+		if (u.isOK()) {
+			User us = u.value();
+			synchronized (users) {
+				if (us != null) {
+					String pwd = user.getPwd() == null ? oldPwd : user.getPwd();
+					us.setPwd(pwd);
+					String displayName = user.getDisplayName() == null ? us.getDisplayName() : user.getDisplayName();
+					us.setDisplayName(displayName);
+				}
 			}
+			return Result.ok(us);
 		}
-		return Result.ok(u);
+		return u;
 	}
 
 	@Override
 	public Result<User> deleteUser(String name, String pwd) {
-		checkUser(name, pwd);
-		executor.submit(() -> {
-			reTry(() -> {
-				deleteFeed(name, pwd);
-				return null;
+		Result<User> us = checkUser(name, pwd);
+		if (us.isOK()) {
+			executor.submit(() -> {
+				reTry(() -> {
+					deleteFeed(name, pwd);
+					return null;
+				});
 			});
-		});
-		synchronized (users) {
-			User u = users.remove(name);
-			return Result.ok(u);
+			synchronized (users) {
+				User u = users.remove(name);
+				return Result.ok(u);
+			}
 		}
-
+		return us;
 	}
 
 	private void deleteFeed(String name, String pwd) {
@@ -140,25 +150,28 @@ public class JavaUsers implements Users {
 		return Result.ok(l);
 	}
 
-	private User checkUser(String name, String pwd) {
+	private Result<User> checkUser(String name, String pwd) {
 		// Check if user is valid
 		if (name == null || pwd == null) {
 			Log.info("name or pwd null.");
-			throw new WebApplicationException(Status.BAD_REQUEST);
+			return Result.error(ErrorCode.BAD_REQUEST);
+			// throw new WebApplicationException(Status.BAD_REQUEST);
 		}
 		synchronized (users) {
 			User user = users.get(name);
 			// Check if user exists
 			if (user == null) {
 				Log.info("User does not exist.");
-				throw new WebApplicationException(Status.NOT_FOUND);
+				return Result.error(ErrorCode.NOT_FOUND);
+				// throw new WebApplicationException(Status.NOT_FOUND);
 			}
 			// Check if the pwd is correct
 			if (!user.getPwd().equals(pwd)) {
 				Log.info("pwd is incorrect.");
-				throw new WebApplicationException(Status.FORBIDDEN);
+				return Result.error(ErrorCode.FORBIDDEN);
+				// throw new WebApplicationException(Status.FORBIDDEN);
 			}
-			return user;
+			return Result.ok(user);
 		}
 
 	}

@@ -12,7 +12,6 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.GenericType;
 import sd2223.trab1.api.rest.UsersService;
-import jakarta.ws.rs.core.Response.Status;
 
 public class RestUsersClient extends RestClient implements Users {
 

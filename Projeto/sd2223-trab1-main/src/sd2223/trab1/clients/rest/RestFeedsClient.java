@@ -6,14 +6,12 @@ import java.util.List;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.java.Feeds;
 import sd2223.trab1.api.java.Result;
-import sd2223.trab1.api.java.Result.ErrorCode;
 import sd2223.trab1.api.rest.FeedsService;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.Response.Status;
 
 public class RestFeedsClient extends RestClient implements Feeds {
 
@@ -54,7 +52,6 @@ public class RestFeedsClient extends RestClient implements Feeds {
         Response r = target.path(user)
                 .queryParam(FeedsService.TIME, time).request()
                 .accept(MediaType.APPLICATION_JSON).get();
-
         return super.toJavaResult(r, new GenericType<List<Message>>() {
         });
 

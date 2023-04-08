@@ -11,7 +11,7 @@ import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import sd2223.trab1.api.java.Result;
-
+import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 
@@ -58,6 +58,20 @@ public class RestClient {
     }
 
     protected <T> Result<T> toJavaResult(Response r, Class<T> entityType) {
+        try {
+            var status = r.getStatusInfo().toEnum();
+            if (status == Status.OK && r.hasEntity())
+                return ok(r.readEntity(entityType));
+            else if (status == Status.NO_CONTENT)
+                return ok();
+
+            return error(getErrorCodeFrom(status.getStatusCode()));
+        } finally {
+            r.close();
+        }
+    }
+
+    protected <T> Result<T> toJavaResult(Response r, GenericType<T> entityType) {
         try {
             var status = r.getStatusInfo().toEnum();
             if (status == Status.OK && r.hasEntity())
