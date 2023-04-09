@@ -78,7 +78,10 @@ public class JavaFeeds implements Feeds {
         String domain = nameDomain[1];
         if (!domain.equals(Domain.getDomain()))
             return Result.error(ErrorCode.BAD_REQUEST);
+        Log.info("Antes Do verify");
         Result<User> u = verifyUser(name, domain, pwd);
+        Log.info("Depois Do verify");
+        Log.info("Is ok?: " + u.isOK());
         if (u.isOK()) {
             User us = u.value();
             long mid = 256 * counter + Domain.getSeq();
@@ -93,8 +96,7 @@ public class JavaFeeds implements Feeds {
                 feeds.put(name, userFeed = new ConcurrentHashMap<Long, Message>());
             userFeed.put(mid, msg);
 
-            Map<String, List<String>> userFollowers = null;
-            userFollowers = followers.get(us.getName()); // domain <nomeUser, User>
+            Map<String, List<String>> userFollowers = followers.get(us.getName()); // domain <nomeUser, User>
 
             if (userFollowers != null) {
                 // colocar mensagens nos feeds dos users do mesmo dominio
@@ -511,6 +513,7 @@ public class JavaFeeds implements Feeds {
         try {
             Discovery d = Discovery.getInstance();
             URI userURI = d.knownUrisOf(domain, USERS_SERVICE);
+            Log.info("userURI: " + userURI);
             // WebTarget target = client.target(userURI).path(UsersService.PATH);
             // return reTry(() -> getUser(name, pwd, target));
             return UsersClientFactory.get(userURI).getUser(name, pwd);
