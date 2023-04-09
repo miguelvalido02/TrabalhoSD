@@ -12,7 +12,6 @@ public class SoapUsersServer {
 	public static final int PORT = 8081;
 	public static final String SERVICE_NAME = "users";
 	public static String SERVER_BASE_URI = "http://%s:%s/soap";
-
 	private static Logger Log = Logger.getLogger(SoapUsersServer.class.getName());
 	static {
 		System.setProperty("java.net.preferIPv4Stack", "true");
@@ -20,14 +19,6 @@ public class SoapUsersServer {
 	}
 
 	public static void main(String[] args) throws Exception {
-
-		// System.setProperty("com.sun.xml.ws.transport.http.client.HttpTransportPipe.dump",
-		// "true");
-		// System.setProperty("com.sun.xml.internal.ws.transport.http.client.HttpTransportPipe.dump",
-		// "true");
-		// System.setProperty("com.sun.xml.ws.transport.http.HttpAdapter.dump", "true");
-		// System.setProperty("com.sun.xml.internal.ws.transport.http.HttpAdapter.dump",
-		// "true");
 		String domain = args[0];
 		Domain.setDomain(domain);
 		Log.setLevel(Level.INFO);

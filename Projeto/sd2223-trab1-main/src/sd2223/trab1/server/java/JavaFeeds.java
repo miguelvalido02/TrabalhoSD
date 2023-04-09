@@ -4,66 +4,42 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 import java.util.List;
-
-import java.util.logging.Logger;
-//import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-/*import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.GenericType;
-import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.Response.Status;*/
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import sd2223.trab1.api.User;
-import sd2223.trab1.api.java.Feeds;
-import sd2223.trab1.api.java.Result;
-import sd2223.trab1.api.java.Result.ErrorCode;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.server.Domain;
+import sd2223.trab1.api.java.Feeds;
+import sd2223.trab1.api.java.Result;
 import sd2223.trab1.server.Discovery;
-//import sd2223.trab1.api.rest.UsersService;
+import sd2223.trab1.api.java.Result.ErrorCode;
 import sd2223.trab1.clients.FeedsClientFactory;
 import sd2223.trab1.clients.UsersClientFactory;
-//import sd2223.trab1.api.rest.FeedsService;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 
-//import jakarta.ws.rs.client.Client;
-//import jakarta.ws.rs.ProcessingException;
-//import jakarta.ws.rs.client.ClientBuilder;
-//import jakarta.ws.rs.WebApplicationException;
-
 public class JavaFeeds implements Feeds {
 
-    private static Logger Log = Logger.getLogger(JavaFeeds.class.getName());
-
-    // private static final int MAX_RETRIES = 10;
-    // private static final int RETRY_SLEEP = 500;
     private static final String USERS_SERVICE = "users";
-
     private static final String FEEDS_SERVICE = "feeds";
 
-    // private Client client;
+    private int counter;
     private ClientConfig config;
+    private ExecutorService executor;
     private Map<String, Set<String>> following; // <username,<user@domain>>
     private Map<String, Map<Long, Message>> feeds;// <username,<mid,message>>
     private Map<String, Map<String, List<String>>> followers; // <username,<domain,<user@domain>>>
-    private ExecutorService executor;
-    private int counter;
 
     public JavaFeeds() {
         config = new ClientConfig();
         config.property(ClientProperties.READ_TIMEOUT, 5000);
         config.property(ClientProperties.CONNECT_TIMEOUT, 5000);
-        // client = ClientBuilder.newClient(config);
         this.following = new ConcurrentHashMap<String, Set<String>>();
         this.feeds = new ConcurrentHashMap<String, Map<Long, Message>>();
         this.followers = new ConcurrentHashMap<String, Map<String, List<String>>>();
@@ -78,19 +54,14 @@ public class JavaFeeds implements Feeds {
         String domain = nameDomain[1];
         if (!domain.equals(Domain.getDomain()))
             return Result.error(ErrorCode.BAD_REQUEST);
-        Log.info("Antes Do verify");
         Result<User> u = verifyUser(name, domain, pwd);
-        Log.info("Depois Do verify");
-        Log.info("Is ok?: " + u.isOK());
         if (u.isOK()) {
             User us = u.value();
             long mid = 256 * counter + Domain.getSeq();
             counter++;
             msg.setId(mid);
             msg.setCreationTime(System.currentTimeMillis());
-            Log.info("post:" + user + msg);
             // post no proprio feed
-
             Map<Long, Message> userFeed = feeds.get(name);
             if (userFeed == null)
                 feeds.put(name, userFeed = new ConcurrentHashMap<Long, Message>());
@@ -140,9 +111,6 @@ public class JavaFeeds implements Feeds {
     private void requestPostOutsideDomain(String domain, Discovery d, String user, Message msg) {
         try {
             URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
-            // WebTarget target =
-            // client.target(userURI).path(FeedsService.PATH).path("post").path(user);
-            // target.request().post(Entity.json(msg));
             FeedsClientFactory.get(userURI).postOutside(user, msg);
         } catch (InterruptedException e) {
         }
@@ -199,34 +167,15 @@ public class JavaFeeds implements Feeds {
             } else {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
-                // WebTarget target = client.target(userURI).path(FeedsService.PATH);
                 return FeedsClientFactory.get(userURI).getMessage(user, mid);
-                // Message m = reTry(() -> getMessage(target, user, mid));
-                // return Result.ok(m);
             }
         } catch (InterruptedException e) {
         }
-        return null;// manhoso
+        return null;
     }
-
-    /*
-     * private Message getMessage(WebTarget target, String user, Long mid) {
-     * Response r =
-     * target.path(user).path(Long.toString(mid)).request().accept(MediaType.
-     * APPLICATION_JSON)
-     * .get();
-     * if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
-     * return r.readEntity(Message.class);// 200 OK
-     * if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
-     * throw new WebApplicationException(Status.NOT_FOUND);// 404 user or message
-     * does not exist
-     * return null;
-     * }
-     */
 
     @Override
     public Result<List<Message>> getMessages(String user, long time) {
-        Log.info("getMessages:" + user + " time: " + time + " currentTime: " + System.currentTimeMillis());
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
@@ -237,7 +186,6 @@ public class JavaFeeds implements Feeds {
                 if (u.isOK()) {
                     Map<Long, Message> userFeed = feeds.get(name);
                     if (userFeed == null) {
-                        Log.severe("Entrei no userFeed==null");
                         return Result.ok(new CopyOnWriteArrayList<Message>());
                     }
                     return Result.ok(userFeed.values().stream().filter(m -> m.getCreationTime() > time)
@@ -247,34 +195,15 @@ public class JavaFeeds implements Feeds {
             } else {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
-                // WebTarget target = client.target(userURI).path(FeedsService.PATH);
-                // List<Message> l = reTry(() -> getMessages(target, user, time));
-                // return Result.ok(l);
                 return FeedsClientFactory.get(userURI).getMessages(user, time);
             }
         } catch (InterruptedException e) {
         }
-        return null;// manhoso
+        return null;
     }
-
-    /*
-     * private List<Message> getMessages(WebTarget target, String user, long time) {
-     * Response r = target.path(user).queryParam(FeedsService.TIME, time).request()
-     * .accept(MediaType.APPLICATION_JSON)
-     * .get();
-     * if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
-     * return r.readEntity(new GenericType<List<Message>>() {
-     * });// 200 OK
-     * if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
-     * throw new WebApplicationException(Status.NOT_FOUND);// 404 user or message
-     * does not exist
-     * return null;
-     * }
-     */
 
     @Override
     public Result<Void> subUser(String user, String userSub, String pwd) {
-        Log.info("subUser:" + user + " sub:" + userSub);
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
@@ -294,7 +223,6 @@ public class JavaFeeds implements Feeds {
                     if (userFollowing == null)
                         following.put(name, userFollowing = new CopyOnWriteArraySet<String>());
                     userFollowing.add(userSub);
-
                 }
                 if (domainSub.equals(Domain.getDomain())) {
                     Map<String, List<String>> subFollowers = followers.get(nameSub);
@@ -318,10 +246,6 @@ public class JavaFeeds implements Feeds {
         try {
             Discovery d = Discovery.getInstance();
             URI userURI = d.knownUrisOf(subDomain, FEEDS_SERVICE);
-            // WebTarget target = client.target(userURI).path(FeedsService.PATH);
-            // target.path("sub").path(user).path(userSub)
-            // .queryParam(FeedsService.PWD, pwd).request()
-            // .post(Entity.json(null));
             FeedsClientFactory.get(userURI).subUser(user, userSub, pwd);
         } catch (InterruptedException e) {
         }
@@ -329,7 +253,6 @@ public class JavaFeeds implements Feeds {
 
     @Override
     public Result<Void> unsubscribeUser(String user, String userSub, String pwd) {
-        Log.info("unsub: " + user + " sub: " + userSub);
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
@@ -372,9 +295,6 @@ public class JavaFeeds implements Feeds {
         try {
             Discovery d = Discovery.getInstance();
             URI userURI = d.knownUrisOf(subDomain, FEEDS_SERVICE);
-            // WebTarget target = client.target(userURI).path(FeedsService.PATH);
-            // target.path("sub").path(user).path(userSub)
-            // .queryParam(FeedsService.PWD, pwd).request().delete();
             FeedsClientFactory.get(userURI).unsubscribeUser(user, userSub, pwd);
         } catch (InterruptedException e) {
         }
@@ -409,10 +329,7 @@ public class JavaFeeds implements Feeds {
                 following.remove(user);
             }
 
-            Map<String, List<String>> userFollowers = null;
-
-            userFollowers = followers.get(user);
-
+            Map<String, List<String>> userFollowers = followers.get(user);
             if (userFollowers != null) {
                 // tirar os followings do proprio dominio
                 List<String> followersInDomain = null;
@@ -421,7 +338,6 @@ public class JavaFeeds implements Feeds {
                 if (followersInDomain != null)
                     for (String follower : followersInDomain) {
                         String followerName = follower.split("@")[0];
-
                         Set<String> followingUserToDelete = following.get(followerName);
                         if (followingUserToDelete != null)
                             followingUserToDelete.remove(nameDomain);
@@ -440,7 +356,6 @@ public class JavaFeeds implements Feeds {
         } else {
             for (Set<String> followingList : following.values())
                 followingList.remove(nameDomain);
-
         }
         return Result.ok();
     }
@@ -449,95 +364,28 @@ public class JavaFeeds implements Feeds {
             Discovery d) {
         try {
             URI userURI = d.knownUrisOf(followerDomain, FEEDS_SERVICE);
-            // WebTarget target = client.target(userURI).path(FeedsService.PATH);
-            // target.path("delete").path(user).path(domain).queryParam(FeedsService.PWD,
-            // pwd)
-            // .request().accept(MediaType.APPLICATION_JSON).delete();
             FeedsClientFactory.get(userURI).deleteFeed(user, followerDomain, pwd);
         } catch (InterruptedException e) {
         }
     }
 
-    /*
-     * protected <T> T reTry(Supplier<T> func) {
-     * // método generico recebe uma funçao que quando invocada devolve T.
-     * // createUser, etc...
-     * for (int i = 0; i < MAX_RETRIES; i++)
-     * try {
-     * return func.get();
-     * } catch (ProcessingException x) {
-     * System.err.println(x.getMessage());
-     * Log.fine("ProcessingException: " + x.getMessage());
-     * sleep(RETRY_SLEEP);
-     * }
-     * return null;
-     * }
-     * 
-     * private void sleep(int ms) {
-     * try {
-     * Thread.sleep(ms);
-     * } catch (InterruptedException x) { // nothing to do...
-     * }
-     * }
-     */
-
     private Result<User> findUser(String domain, String name) {
         Discovery d = Discovery.getInstance();
         try {
             URI userURI = d.knownUrisOf(domain, USERS_SERVICE);
-            // WebTarget target = client.target(userURI).path(UsersService.PATH);
-            // return reTry(() -> findUser(name, domain, target, d));
             return UsersClientFactory.get(userURI).userExists(name);
         } catch (InterruptedException e) {
-
         }
         return null;
     }
-
-    /*
-     * private User findUser(String name, String domain, WebTarget target, Discovery
-     * d) {
-     * Response r =
-     * target.path("find").path(name).request().accept(MediaType.APPLICATION_JSON).
-     * get();
-     * if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
-     * throw new WebApplicationException(Status.NOT_FOUND);// 404 user does not
-     * exist
-     * if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
-     * return r.readEntity(User.class);
-     * return null;
-     * }
-     */
 
     private Result<User> verifyUser(String name, String domain, String pwd) {
         try {
             Discovery d = Discovery.getInstance();
             URI userURI = d.knownUrisOf(domain, USERS_SERVICE);
-            Log.info("userURI: " + userURI);
-            // WebTarget target = client.target(userURI).path(UsersService.PATH);
-            // return reTry(() -> getUser(name, pwd, target));
             return UsersClientFactory.get(userURI).getUser(name, pwd);
         } catch (InterruptedException e) {
         }
         return null;
     }
-
-    /*
-     * private User getUser(String name, String pwd, WebTarget target) {
-     * Response r = target.path(name)
-     * .queryParam(UsersService.PWD, pwd).request()
-     * .accept(MediaType.APPLICATION_JSON)
-     * .get();
-     * 
-     * if (r.getStatus() == Status.OK.getStatusCode() && r.hasEntity())
-     * return r.readEntity(User.class);// 200 OK
-     * else if (r.getStatus() == Status.NOT_FOUND.getStatusCode())
-     * throw new WebApplicationException(Status.NOT_FOUND);
-     * else if (r.getStatus() == Status.FORBIDDEN.getStatusCode())
-     * throw new WebApplicationException(Status.FORBIDDEN);// 403 pwd is wrong or
-     * user does not exist
-     * else
-     * throw new WebApplicationException(Status.BAD_REQUEST);// 400 otherwise
-     * }
-     */
 }

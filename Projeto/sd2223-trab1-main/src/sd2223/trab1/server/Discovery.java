@@ -68,7 +68,6 @@ class DiscoveryImpl implements Discovery {
 	static final int DISCOVERY_RETRY_TIMEOUT = 3000;
 	static final int DISCOVERY_ANNOUNCE_PERIOD = 1000;// 1 sec
 
-	// Replace with appropriate values...
 	static final InetSocketAddress DISCOVERY_ADDR = new InetSocketAddress("230.120.130.145", 1234);
 
 	// Used separate the two fields that make up a service announcement.
@@ -143,14 +142,8 @@ class DiscoveryImpl implements Discovery {
 						var pkt = new DatagramPacket(new byte[MAX_DATAGRAM_SIZE], MAX_DATAGRAM_SIZE);
 						ms.receive(pkt);
 						var msg = new String(pkt.getData(), 0, pkt.getLength());
-						// Log.info(String.format("Received: %s", msg));
-
 						var parts = msg.split(DELIMITER);
 						if (parts.length == 2) {
-							// domain:serviceName <- parts[0]
-							// String[] leftSide = parts[0].split(":");
-							// String domain = leftSide[0];
-							// String serviceName = leftSide[1];
 							var serverUrl = parts[1];
 							var uri = URI.create(serverUrl);
 							Cache<String, URI> cache = urisMap.get(parts[0]);

@@ -101,7 +101,7 @@ public class RestClient {
     private void sleep(int ms) {
         try {
             Thread.sleep(ms);
-        } catch (InterruptedException x) { // nothing to do...
+        } catch (InterruptedException x) {
         }
     }
 

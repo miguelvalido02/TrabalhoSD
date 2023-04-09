@@ -70,6 +70,16 @@ public interface UsersService {
     @WebMethod
     List<User> searchUsers(String pattern) throws UsersException;
 
+    /**
+     * Obtains the information of the user identified by name
+     * 
+     * @param name the name of the user
+     * @return 200 and the user object, if the userId exists and password matches
+     *         the
+     *         existing password;
+     *         403 if the password is incorrect;
+     *         404 if no user exists with the provided userId
+     */
     @WebMethod
     User userExists(String name) throws UsersException;
 }

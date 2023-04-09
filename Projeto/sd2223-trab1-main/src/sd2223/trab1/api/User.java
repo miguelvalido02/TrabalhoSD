@@ -32,12 +32,20 @@ public class User {
 		this.name = name;
 	}
 
-	public String getPwd() {
-		return pwd;
-	}
-
 	public void setPwd(String pwd) {
 		this.pwd = pwd;
+	}
+
+	public String getPwd() {
+		return this.pwd;
+	}
+
+	public boolean checkPasswordNull() {
+		return this.pwd == null;
+	}
+
+	public boolean checkPassword(String pwd) {
+		return pwd.equals(this.pwd);
 	}
 
 	public String getDisplayName() {

@@ -47,6 +47,13 @@ public interface FeedsService {
 	@Produces(MediaType.APPLICATION_JSON)
 	long postMessage(@PathParam(USER) String user, @QueryParam(PWD) String pwd, Message msg);
 
+	/**
+	 * Puts the new message in the feed of all the followers of the user in this
+	 * domain.
+	 *
+	 * @param user user of the operation (format user@domain)
+	 * @param msg  the message object to be posted to the server
+	 */
 	@POST
 	@Path("/post/{" + USER + "}")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -148,6 +155,13 @@ public interface FeedsService {
 	@Produces(MediaType.APPLICATION_JSON)
 	List<String> listSubs(@PathParam(USER) String user);
 
+	/**
+	 * Removes the feed of a user being deleted
+	 * 
+	 * @param user   user feed being deleted
+	 * @param domain the domain of the user being deleted
+	 * @param pwd    password of the user
+	 */
 	@DELETE
 	@Path("/delete/{" + USER + "}/{" + DOMAIN + "}")
 	void deleteFeed(@PathParam(USER) String user, @PathParam(DOMAIN) String domain, @QueryParam(PWD) String pwd);

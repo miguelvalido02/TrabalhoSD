@@ -20,7 +20,7 @@ public class Message {
 	}
 
 	public Message() {
-		this.id = 555;
+		this.id = -1;
 		this.user = null;
 		this.domain = null;
 		this.creationTime = -1;
