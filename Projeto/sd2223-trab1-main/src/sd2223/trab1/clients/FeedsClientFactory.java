@@ -1,6 +1,8 @@
 package sd2223.trab1.clients;
 
 import java.net.URI;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import sd2223.trab1.api.java.Feeds;
 import sd2223.trab1.clients.rest.RestFeedsClient;
@@ -10,15 +12,20 @@ public class FeedsClientFactory {
 
     private static final String REST = "/rest";
     private static final String SOAP = "/soap";
+    private static Map<String, Feeds> clients = new ConcurrentHashMap<String, Feeds>();
 
     public static Feeds get(URI serverURI) {
         var uriString = serverURI.toString();
-
-        if (uriString.endsWith(REST))
-            return new RestFeedsClient(serverURI);
-        else if (uriString.endsWith(SOAP))
-            return new SoapFeedsClient(serverURI);
-        else
+        if (clients.containsKey(uriString))
+            return clients.get(uriString);
+        Feeds newFeedClient = null;
+        if (uriString.endsWith(REST)) {
+            clients.put(uriString, newFeedClient = new RestFeedsClient(serverURI));
+            return newFeedClient;
+        } else if (uriString.endsWith(SOAP)) {
+            clients.put(uriString, newFeedClient = new SoapFeedsClient(serverURI));
+            return newFeedClient;
+        } else
             throw new RuntimeException("Unknown service type..." + uriString);
     }
 }
