@@ -33,6 +33,16 @@ public interface FeedsService {
     long postMessage(String user, String pwd, Message msg) throws FeedsException;
 
     /**
+	 * Puts the new message in the feed of all the followers of the user in this
+	 * domain.
+	 *
+	 * @param user user of the operation (format user@domain)
+	 * @param msg  the message object to be posted to the server
+	 */
+    @WebMethod
+    void postOutside(String user, Message msg) throws FeedsException;
+
+    /**
      * Removes the message identified by mid from the feed of user.
      * A user must contact the server of her domain directly (i.e., this operation
      * should not be
@@ -115,9 +125,13 @@ public interface FeedsService {
     @WebMethod
     List<String> listSubs(String user) throws FeedsException;
 
+    /**
+	 * Removes the feed of a user being deleted
+	 * 
+	 * @param user   user feed being deleted
+	 * @param domain the domain of the user being deleted
+	 * @param pwd    password of the user
+	 */
     @WebMethod
     void deleteFeed(String user, String domain, String pwd) throws FeedsException;
-
-    @WebMethod
-    void postOutside(String user, Message msg) throws FeedsException;
 }

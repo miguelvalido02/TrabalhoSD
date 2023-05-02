@@ -4,6 +4,8 @@ import java.net.URI;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
+import javax.net.ssl.HttpsURLConnection;
+
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 
@@ -16,6 +18,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 
 import sd2223.trab1.api.java.Result.ErrorCode;
+import sd2223.trab1.tls.InsecureHostnameVerifier;
 
 import static sd2223.trab1.api.java.Result.error;
 import static sd2223.trab1.api.java.Result.ok;
@@ -34,6 +37,7 @@ public class RestClient {
     final ClientConfig config;
 
     RestClient(URI serverURI) {
+        HttpsURLConnection.setDefaultHostnameVerifier(new InsecureHostnameVerifier()); // e necessario
         this.serverURI = serverURI;
         this.config = new ClientConfig();
 

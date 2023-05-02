@@ -8,10 +8,13 @@ import java.net.URI;
 import java.net.URL;
 import java.util.logging.Logger;
 
+import javax.net.ssl.HttpsURLConnection;
+
 import com.sun.xml.ws.client.BindingProviderProperties;
 
 import sd2223.trab1.api.java.Result;
 import sd2223.trab1.api.java.Result.ErrorCode;
+import sd2223.trab1.tls.InsecureHostnameVerifier;
 import jakarta.xml.ws.BindingProvider;
 import jakarta.xml.ws.WebServiceException;
 
@@ -38,6 +41,7 @@ abstract class SoapClient {
     protected final URI uri;
 
     public SoapClient(URI uri) {
+        HttpsURLConnection.setDefaultHostnameVerifier(new InsecureHostnameVerifier()); // e necessario?
         this.uri = uri;
     }
 

@@ -102,6 +102,16 @@ public interface UsersService {
 	@Produces(MediaType.APPLICATION_JSON)
 	List<User> searchUsers(@QueryParam(QUERY) String pattern);
 
+	/**
+	 * Obtains the information of the user identified by name
+	 * 
+	 * @param name the name of the user
+	 * @return 200 and the user object, if the userId exists and password matches
+	 *         the
+	 *         existing password;
+	 *         403 if the password is incorrect;
+	 *         404 if no user exists with the provided userId
+	 */
 	@GET
 	@Path("/find/{" + NAME + "}")
 	@Produces(MediaType.APPLICATION_JSON)

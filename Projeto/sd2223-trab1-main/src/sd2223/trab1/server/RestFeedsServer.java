@@ -4,6 +4,8 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.util.logging.Logger;
 
+import javax.net.ssl.SSLContext;
+
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -20,7 +22,7 @@ public class RestFeedsServer {
 
     public static final int PORT = 8080;
     public static final String SERVICE = "feeds";
-    private static final String SERVER_URI_FMT = "http://%s:%s/rest";
+    private static final String SERVER_URI_FMT = "https://%s:%s/rest";
 
     public static void main(String[] args) {
         try {
@@ -33,10 +35,10 @@ public class RestFeedsServer {
 
             String ip = InetAddress.getLocalHost().getHostAddress();
             String serverURI = String.format(SERVER_URI_FMT, ip, PORT);
-            JdkHttpServerFactory.createHttpServer(URI.create(serverURI), config);
+            URI uri = URI.create(serverURI);
+            JdkHttpServerFactory.createHttpServer(uri, config, SSLContext.getDefault());
             Log.info(String.format("%s Server ready @ %s\n", SERVICE, serverURI));
 
-            // More code can be executed here...
             Discovery d = Discovery.getInstance();
             d.announce(domain, SERVICE, serverURI);
 
