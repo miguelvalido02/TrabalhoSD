@@ -43,8 +43,12 @@ public class SoapUsersServer {
 
 		String serverURI = String.format(SERVER_BASE_URI, ip, PORT);
 
+<<<<<<< HEAD
 		// Endpoint.publish(serverURI.replace(ip, "0.0.0.0"), new
 		// SoapUsersWebService());
+=======
+		Endpoint.publish(serverURI, new SoapUsersWebService());
+>>>>>>> c145f2bb242f4e33fb81af09eb6695fd89a9c421
 		Log.info(String.format("%s Soap Server ready @ %s\n", SERVICE_NAME, serverURI));
 
 		Discovery d = Discovery.getInstance();
