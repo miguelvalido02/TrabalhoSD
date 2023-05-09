@@ -37,7 +37,7 @@ public class RestClient {
     final ClientConfig config;
 
     RestClient(URI serverURI) {
-        HttpsURLConnection.setDefaultHostnameVerifier(new InsecureHostnameVerifier()); // e necessario
+        HttpsURLConnection.setDefaultHostnameVerifier(new InsecureHostnameVerifier()); // e necessario?
         this.serverURI = serverURI;
         this.config = new ClientConfig();
 

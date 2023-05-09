@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>sd2223-aula8</name>
+	<name>sd2223-aula9</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -22,11 +22,7 @@
 	</natures>
 	<filteredResources>
 		<filter>
-<<<<<<< HEAD
-			<id>1683620047295</id>
-=======
-			<id>1683230701620</id>
->>>>>>> 29cacffc0bcf789fcc3dd10057aa35c1df418886
+			<id>1683620803074</id>
 			<name></name>
 			<type>30</type>
 			<matcher>
