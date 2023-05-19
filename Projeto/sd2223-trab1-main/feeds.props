@@ -10,3 +10,17 @@ FEEDS_SOAP_PORT=8081
 FEEDS_EXTRA_ARGS=
 DISCOVERY_MULTICAST_IP=230.120.130.145
 DISCOVERY_MULTICAST_PORT=1234
+
+FEEDS_PROXY_SERVER_MAINCLASS=classe do servidor Proxy Feeds REST (e.g. sd2223.tp2.server.ProxyFeedsServer)
+FEEDS_PROXY_PORT=porto do servidor Proxy Feeds REST (e.g. 8080)
+FEEDS_PROXY_EXTRA_ARGS=argumentos extra a passar ao servidor PROXY Feeds
+MASTODOM_USERNAME=user name in Mastodom (e.g. nmp)
+FEEDS_REP_SERVER_MAINCLASS=classe do servidor Feeds REST, com replicação (e.g. sd2223.tp2.server.RepFeedsServer)
+FEEDS_REP_PORT=porto do servidor Feeds REST, com replicação (e.g. 8080)
+FEEDS_REP_EXTRA_ARGS_FIRST=argumentos extra a passar ao primeiro servidor replicado
+FEEDS_REP_EXTRA_ARGS_OTHER=argumentos extra a passar ao outros servidores replicados
+
+USERS_KEYSTORES= users0-ourorg0,users0.jks,pwdpwd users0-ourorg1,users1.jks,pwdpwd users0-ourorg2,users2.jks,pwdpwd
+FEEDS_KEYSTORES= feeds0-ourorg0,feeds0-0.jks,pwdpwd feeds1-ourorg0,feeds1-0.jks,pwdpwd feeds2-ourorg0,feeds2-0.jks,pwdpwd feeds0-ourorg1,feeds0-1.jks,pwdpwd feeds1-ourorg1,feeds1-1.jks,pwdpwd feeds2-ourorg1,feeds2-1.jks,pwdpwd feeds0-ourorg2,feeds0-2.jks,pwdpwd feeds1-ourorg2,feeds1-2.jks,pwdpwd feeds2-ourorg2,feeds2-2.jks,pwdpwd
+CLIENT_TRUSTSTORE= client-ts.jks
+CLIENT_TRUSTSTORE_PWD= pwdpwd

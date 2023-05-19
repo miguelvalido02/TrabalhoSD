@@ -12,6 +12,8 @@ ENV PATH=$PATH:$JAVA_HOME/bin
 # working directory inside docker image
 WORKDIR /home/sd
 
+COPY tls/*.jks /home/sd/
+
 # copy the jar created by assembly to the docker image
 COPY target/*jar-with-dependencies.jar sd2223.jar
 
