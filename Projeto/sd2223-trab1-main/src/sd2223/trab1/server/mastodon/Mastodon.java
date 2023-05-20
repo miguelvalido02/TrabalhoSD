@@ -48,10 +48,11 @@ public class Mastodon implements Feeds {
 	protected OAuth20Service service;
 	protected OAuth2AccessToken accessToken;
 
-	private static Mastodon impl;
+	// private static Mastodon impl;
 
-	protected Mastodon() {
+	public Mastodon() {
 		try {
+			System.out.println("ola");
 			service = new ServiceBuilder(clientKey).apiSecret(clientSecret).build(MastodonApi.instance());
 			accessToken = new OAuth2AccessToken(accessTokenStr);
 		} catch (Exception x) {
@@ -60,11 +61,13 @@ public class Mastodon implements Feeds {
 		}
 	}
 
-	synchronized public static Mastodon getInstance() {
-		if (impl == null)
-			impl = new Mastodon();
-		return impl;
-	}
+	/*
+	 * synchronized public static Mastodon getInstance() {
+	 * if (impl == null)
+	 * impl = new Mastodon();
+	 * return impl;
+	 * }
+	 */
 
 	private String getEndpoint(String path, Object... args) {
 		var fmt = MASTODON_SERVER_URI + path;
