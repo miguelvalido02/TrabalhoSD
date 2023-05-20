@@ -32,7 +32,8 @@ public class SoapFeedsServer {
         Domain.setSeq(Integer.parseInt(args[1]));
         Log.setLevel(Level.INFO);
 
-        String ip = InetAddress.getLocalHost().getHostAddress();
+        // String ip = InetAddress.getLocalHost().getHostAddress();
+        String ip = InetAddress.getLocalHost().getHostName();
 
         var server = HttpsServer.create(new InetSocketAddress(ip, PORT), 0);
 

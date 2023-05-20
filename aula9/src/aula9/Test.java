@@ -12,8 +12,5 @@ public class Test {
 		var res1 = Mastodon.getInstance().getMessages("59744", 0);
 		System.out.println(res1);
 
-		var res2 = Mastodon.getInstance().removeFromPersonalFeed("59744", res0.value(),
-				"b37c6b8be0ea87541a3ed6c068f36669");
-		System.out.println(res2);
 	}
 }

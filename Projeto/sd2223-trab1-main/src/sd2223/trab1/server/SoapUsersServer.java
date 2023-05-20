@@ -30,7 +30,8 @@ public class SoapUsersServer {
 		Domain.setDomain(domain);
 		Log.setLevel(Level.INFO);
 
-		String ip = InetAddress.getLocalHost().getHostAddress();
+		// String ip = InetAddress.getLocalHost().getHostAddress();
+		String ip = InetAddress.getLocalHost().getHostName();
 
 		var server = HttpsServer.create(new InetSocketAddress(ip, PORT), 0);
 
