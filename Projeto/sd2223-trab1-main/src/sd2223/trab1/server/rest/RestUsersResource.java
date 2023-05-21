@@ -7,7 +7,6 @@ import sd2223.trab1.api.java.Users;
 import sd2223.trab1.server.java.JavaUsers;
 import sd2223.trab1.api.rest.UsersService;
 
-@Singleton
 public class RestUsersResource extends RestResource implements UsersService {
 
 	final Users impl;

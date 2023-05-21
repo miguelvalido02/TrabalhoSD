@@ -4,9 +4,10 @@ import java.util.List;
 import jakarta.inject.Singleton;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.java.Feeds;
-import sd2223.trab1.server.rest.RestResource;
 import sd2223.trab1.api.rest.FeedsService;
+import sd2223.trab1.server.rest.RestResource;
 
+//TODO remover singleton
 @Singleton
 public class ProxyFeedsResource extends RestResource implements FeedsService {
     final Feeds impl;

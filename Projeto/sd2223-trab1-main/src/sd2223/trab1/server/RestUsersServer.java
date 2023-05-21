@@ -29,7 +29,7 @@ public class RestUsersServer {
 			String domain = args[0];
 			Domain.setDomain(domain);
 			ResourceConfig config = new ResourceConfig();
-			config.register(RestUsersResource.class);
+			config.register(new RestUsersResource());
 
 			// String ip = InetAddress.getLocalHost().getHostAddress();
 			String ip = InetAddress.getLocalHost().getHostName();

@@ -31,7 +31,7 @@ public class RestFeedsServer {
             Domain.setDomain(domain);
             Domain.setSeq(seq);
             ResourceConfig config = new ResourceConfig();
-            config.register(RestFeedsResource.class);
+            config.register(new RestFeedsResource());
 
             // String ip = InetAddress.getLocalHost().getHostAddress();
             String ip = InetAddress.getLocalHost().getHostName();
