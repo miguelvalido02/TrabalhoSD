@@ -16,7 +16,7 @@ public record PostStatusResult(String id, String content, String created_at, Mas
 	}
 
 	public String getText() {
-		return content;
+		return content.split("<p>")[1].split("</p>")[0];
 	}
 
 	public Message toMessage() {

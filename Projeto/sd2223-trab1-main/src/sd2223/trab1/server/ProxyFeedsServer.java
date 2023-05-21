@@ -10,6 +10,7 @@ import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import sd2223.trab1.server.mastodon.Mastodon;
+import sd2223.trab1.server.mastodon.ProxyFeedsResource;
 
 public class ProxyFeedsServer {
 
@@ -31,7 +32,7 @@ public class ProxyFeedsServer {
             Domain.setDomain(domain);
             Domain.setSeq(seq);
             ResourceConfig config = new ResourceConfig();
-            config.register(Mastodon.class);
+            config.register(ProxyFeedsResource.class);
 
             // String ip = InetAddress.getLocalHost().getHostAddress();
             String ip = InetAddress.getLocalHost().getHostName();

@@ -8,10 +8,10 @@ import java.util.List;
 
 import com.google.gson.reflect.TypeToken;
 
-//import jakarta.ws.rs.core.Response.Status;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.java.Feeds;
 import sd2223.trab1.api.java.Result;
+import sd2223.trab1.server.mastodon.msgs.MastodonAccount;
 import sd2223.trab1.server.mastodon.msgs.PostStatusArgs;
 import sd2223.trab1.server.mastodon.msgs.PostStatusResult;
 
@@ -31,9 +31,9 @@ public class Mastodon implements Feeds {
 
 	static String MASTODON_SERVER_URI = MASTODON_NOVA_SERVER_URI;
 
-	private static final String clientKey = "4pG7sNt2fFsdM5XE7cVMS9PrpvThFVR8H6jM30WKaDA";
-	private static final String clientSecret = "7l5nBFG-Xrn-P157aTV_IP4K3MvPJqS12dmvEAcQfFk";
-	private static final String accessTokenStr = "hmYDu_QN3OEBkivXthoCeSjtONDqMib0PTE-qmOBdZc";
+	private static final String clientKey = "KXkdmRm9CC8oE2GI6AJaeyLk6r_hns18ILErvMufjlU";
+	private static final String clientSecret = "uz5BWuywl5mrw7nLQppidnUDbHVhu6AX72uX5jC9848";
+	private static final String accessTokenStr = "k_KOCnJWOwpqTLvWYVIoOWUSGUiJNwdTYfGE0nc9edo";
 
 	static final String STATUSES_PATH = "/api/v1/statuses";
 	static final String TIMELINES_PATH = "/api/v1/timelines/home";
@@ -48,11 +48,8 @@ public class Mastodon implements Feeds {
 	protected OAuth20Service service;
 	protected OAuth2AccessToken accessToken;
 
-	// private static Mastodon impl;
-
 	public Mastodon() {
 		try {
-			System.out.println("ola");
 			service = new ServiceBuilder(clientKey).apiSecret(clientSecret).build(MastodonApi.instance());
 			accessToken = new OAuth2AccessToken(accessTokenStr);
 		} catch (Exception x) {
@@ -61,14 +58,6 @@ public class Mastodon implements Feeds {
 		}
 	}
 
-	/*
-	 * synchronized public static Mastodon getInstance() {
-	 * if (impl == null)
-	 * impl = new Mastodon();
-	 * return impl;
-	 * }
-	 */
-
 	private String getEndpoint(String path, Object... args) {
 		var fmt = MASTODON_SERVER_URI + path;
 		return String.format(fmt, args);
@@ -76,16 +65,13 @@ public class Mastodon implements Feeds {
 
 	@Override
 	public Result<Long> postMessage(String user, String pwd, Message msg) {
-		System.out.println("Entrei no postMessage");
 		try {
 			final OAuthRequest request = new OAuthRequest(Verb.POST, getEndpoint(STATUSES_PATH));
 			JSON.toMap(new PostStatusArgs(msg.getText())).forEach((k, v) -> {
 				request.addBodyParameter(k, v.toString());
 			});
 			service.signRequest(accessToken, request);
-			System.out.println("Antes da response");
 			Response response = service.execute(request);
-			System.out.println("Depois da response");
 			if (response.getCode() == HTTP_OK) {
 				var res = JSON.decode(response.getBody(), PostStatusResult.class);
 				return ok(res.getId());
@@ -112,7 +98,7 @@ public class Mastodon implements Feeds {
 		} catch (Exception x) {
 			x.printStackTrace();
 		}
-		return error(Result.ErrorCode.INTERNAL_ERROR);
+		return error(INTERNAL_ERROR);
 	}
 
 	@Override
@@ -128,26 +114,77 @@ public class Mastodon implements Feeds {
 		} catch (Exception x) {
 			x.printStackTrace();
 		}
-		return error(Result.ErrorCode.INTERNAL_ERROR);
-	}
-
-	@Override
-	public Result<Void> subUser(String user, String userSub, String pwd) {
-		return error(NOT_IMPLEMENTED);
-	}
-
-	@Override
-	public Result<Void> unsubscribeUser(String user, String userSub, String pwd) {
-		return error(NOT_IMPLEMENTED);
-	}
-
-	@Override
-	public Result<Void> postOutside(String user, Message msg) {
-		return error(NOT_IMPLEMENTED);
+		return error(NOT_FOUND);
 	}
 
 	@Override
 	public Result<Void> removeFromPersonalFeed(String user, long mid, String pwd) {
+		try {
+			final OAuthRequest request = new OAuthRequest(Verb.DELETE, getEndpoint(STATUSES_PATH) + "/" + mid);
+			service.signRequest(accessToken, request);
+			Response response = service.execute(request);
+			if (response.getCode() == HTTP_OK)
+				return ok();
+		} catch (Exception x) {
+			x.printStackTrace();
+		}
+		return error(NOT_FOUND);
+	}
+
+	@Override
+	public Result<Void> subUser(String user, String userSub, String pwd) {
+		try {
+			String id = getId(userSub);
+			if (id == null)
+				return error(NOT_FOUND);
+			final OAuthRequest request = new OAuthRequest(Verb.POST, getEndpoint(ACCOUNT_FOLLOW_PATH, id));
+			service.signRequest(accessToken, request);
+			Response response = service.execute(request);
+			if (response.getCode() == HTTP_OK)
+				return ok();
+		} catch (Exception x) {
+			x.printStackTrace();
+		}
+		return error(NOT_FOUND);
+	}
+
+	@Override
+	public Result<Void> unsubscribeUser(String user, String userSub, String pwd) {
+		try {
+			String id = getId(userSub);
+			if (id == null)
+				return error(NOT_FOUND);
+			final OAuthRequest request = new OAuthRequest(Verb.POST, getEndpoint(ACCOUNT_UNFOLLOW_PATH, id));
+			service.signRequest(accessToken, request);
+			Response response = service.execute(request);
+			if (response.getCode() == HTTP_OK)
+				return ok();
+		} catch (Exception x) {
+			x.printStackTrace();
+		}
+		return error(NOT_FOUND);
+	}
+
+	private String getId(String user) {
+		try {
+			final OAuthRequest request = new OAuthRequest(Verb.GET, getEndpoint(SEARCH_ACCOUNTS_PATH));
+			request.addQuerystringParameter("q", user);
+			service.signRequest(accessToken, request);
+			Response response = service.execute(request);
+			if (response.getCode() == HTTP_OK) {
+				List<MastodonAccount> res = JSON.decode(response.getBody(), new TypeToken<List<MastodonAccount>>() {
+				});
+				MastodonAccount account = res.get(0);
+				return account.getId();
+			}
+		} catch (Exception x) {
+			x.printStackTrace();
+		}
+		return null;
+	}
+
+	@Override
+	public Result<Void> postOutside(String user, Message msg) {
 		return error(NOT_IMPLEMENTED);
 	}
 
