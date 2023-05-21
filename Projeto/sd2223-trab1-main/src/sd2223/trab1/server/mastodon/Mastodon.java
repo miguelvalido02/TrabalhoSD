@@ -1,7 +1,7 @@
 package sd2223.trab1.server.mastodon;
 
-import static sd2223.trab1.api.java.Result.error;
 import static sd2223.trab1.api.java.Result.ok;
+import static sd2223.trab1.api.java.Result.error;
 import static sd2223.trab1.api.java.Result.ErrorCode.*;
 
 import java.util.List;
@@ -11,16 +11,16 @@ import com.google.gson.reflect.TypeToken;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.java.Feeds;
 import sd2223.trab1.api.java.Result;
-import sd2223.trab1.server.mastodon.msgs.MastodonAccount;
 import sd2223.trab1.server.mastodon.msgs.PostStatusArgs;
+import sd2223.trab1.server.mastodon.msgs.MastodonAccount;
 import sd2223.trab1.server.mastodon.msgs.PostStatusResult;
 
+import com.github.scribejava.core.model.Verb;
+import com.github.scribejava.core.model.Response;
+import com.github.scribejava.core.model.OAuthRequest;
+import com.github.scribejava.core.oauth.OAuth20Service;
 import com.github.scribejava.core.builder.ServiceBuilder;
 import com.github.scribejava.core.model.OAuth2AccessToken;
-import com.github.scribejava.core.model.OAuthRequest;
-import com.github.scribejava.core.model.Response;
-import com.github.scribejava.core.model.Verb;
-import com.github.scribejava.core.oauth.OAuth20Service;
 
 import sd2223.trab1.server.util.JSON;
 
@@ -37,11 +37,11 @@ public class Mastodon implements Feeds {
 
 	static final String STATUSES_PATH = "/api/v1/statuses";
 	static final String TIMELINES_PATH = "/api/v1/timelines/home";
-	static final String ACCOUNT_FOLLOWING_PATH = "/api/v1/accounts/%s/following";
-	static final String VERIFY_CREDENTIALS_PATH = "/api/v1/accounts/verify_credentials";
 	static final String SEARCH_ACCOUNTS_PATH = "/api/v1/accounts/search";
 	static final String ACCOUNT_FOLLOW_PATH = "/api/v1/accounts/%s/follow";
 	static final String ACCOUNT_UNFOLLOW_PATH = "/api/v1/accounts/%s/unfollow";
+	static final String ACCOUNT_FOLLOWING_PATH = "/api/v1/accounts/%s/following";
+	static final String VERIFY_CREDENTIALS_PATH = "/api/v1/accounts/verify_credentials";
 
 	private static final int HTTP_OK = 200;
 

@@ -1,16 +1,13 @@
 package sd2223.trab1.server;
 
-import java.net.InetAddress;
 import java.net.URI;
+import java.net.InetAddress;
 import java.util.logging.Logger;
-
 import javax.net.ssl.SSLContext;
 
-import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
-
-import sd2223.trab1.server.mastodon.Mastodon;
 import sd2223.trab1.server.mastodon.ProxyFeedsResource;
+import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 
 public class ProxyFeedsServer {
 
