@@ -29,7 +29,7 @@ public class ProxyFeedsServer {
             Domain.setDomain(domain);
             Domain.setSeq(seq);
             ResourceConfig config = new ResourceConfig();
-            config.register(ProxyFeedsResource.class);
+            config.register(new ProxyFeedsResource());
 
             // String ip = InetAddress.getLocalHost().getHostAddress();
             String ip = InetAddress.getLocalHost().getHostName();

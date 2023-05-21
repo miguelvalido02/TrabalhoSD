@@ -2,7 +2,7 @@ package sd2223.trab1.server.rest;
 
 import java.util.List;
 import sd2223.trab1.api.User;
-import jakarta.inject.Singleton;
+//import jakarta.inject.Singleton;
 import sd2223.trab1.api.java.Users;
 import sd2223.trab1.server.java.JavaUsers;
 import sd2223.trab1.api.rest.UsersService;
