@@ -17,7 +17,6 @@ import sd2223.trab1.server.Domain;
 import sd2223.trab1.api.java.Result;
 import sd2223.trab1.server.Discovery;
 import sd2223.trab1.api.java.Result.ErrorCode;
-import sd2223.trab1.clients.FeedsClientFactory;
 import sd2223.trab1.clients.UsersClientFactory;
 import sd2223.trab1.server.kafka.sync.SyncPoint;
 
@@ -50,7 +49,7 @@ public class RepFeeds implements RepFeedsInterface {
     }
 
     @Override
-    public Result<Long> postMessage(String user, String pwd, Message msg) {
+    public Result<Long> postMessage(String user, String pwd, Message msg, Long version) {
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
@@ -58,11 +57,15 @@ public class RepFeeds implements RepFeedsInterface {
             return Result.error(ErrorCode.BAD_REQUEST);
         Result<User> u = verifyUser(name, domain, pwd);
         if (u.isOK()) {
+            /*
+             * if header is null
+             * else Thread.submit(waitforversion version)
+             */
             User us = u.value();
             long mid = 256 * counter + Domain.getSeq();
             counter++;
             msg.setId(mid);
-            msg.setCreationTime(System.currentTimeMillis());
+            msg.setCreationTime(System.currentTimeMillis());// TODO
             // post no proprio feed
             Map<Long, Message> userFeed = feeds.get(name);
             if (userFeed == null)
@@ -113,7 +116,7 @@ public class RepFeeds implements RepFeedsInterface {
     private void requestPostOutsideDomain(String domain, Discovery d, String user, Message msg) {
         try {
             URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
-            FeedsClientFactory.get(userURI).postOutside(user, msg);
+            RepFeedsClientFactory.get(userURI).postOutside(user, msg);
         } catch (InterruptedException e) {
         }
     }
@@ -134,7 +137,7 @@ public class RepFeeds implements RepFeedsInterface {
     }
 
     @Override
-    public Result<Void> removeFromPersonalFeed(String user, long mid, String pwd) {
+    public Result<Void> removeFromPersonalFeed(String user, long mid, String pwd, Long version) {
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
@@ -150,7 +153,7 @@ public class RepFeeds implements RepFeedsInterface {
     }
 
     @Override
-    public Result<Message> getMessage(String user, long mid) {
+    public Result<Message> getMessage(String user, long mid, Long version) {
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
@@ -169,7 +172,7 @@ public class RepFeeds implements RepFeedsInterface {
             } else {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
-                return FeedsClientFactory.get(userURI).getMessage(user, mid);
+                return RepFeedsClientFactory.get(userURI).getMessage(user, mid, version);
             }
         } catch (InterruptedException e) {
         }
@@ -177,7 +180,7 @@ public class RepFeeds implements RepFeedsInterface {
     }
 
     @Override
-    public Result<List<Message>> getMessages(String user, long time) {
+    public Result<List<Message>> getMessages(String user, long time, Long version) {
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
@@ -197,7 +200,7 @@ public class RepFeeds implements RepFeedsInterface {
             } else {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
-                return FeedsClientFactory.get(userURI).getMessages(user, time);
+                return RepFeedsClientFactory.get(userURI).getMessages(user, time, version);
             }
         } catch (InterruptedException e) {
         }
@@ -205,7 +208,7 @@ public class RepFeeds implements RepFeedsInterface {
     }
 
     @Override
-    public Result<Void> subUser(String user, String userSub, String pwd) {
+    public Result<Void> subUser(String user, String userSub, String pwd, Long version) {
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
@@ -248,13 +251,13 @@ public class RepFeeds implements RepFeedsInterface {
         try {
             Discovery d = Discovery.getInstance();
             URI userURI = d.knownUrisOf(subDomain, FEEDS_SERVICE);
-            FeedsClientFactory.get(userURI).subUser(user, userSub, pwd);
+            RepFeedsClientFactory.get(userURI).subUser(user, userSub, pwd, Long.MIN_VALUE);
         } catch (InterruptedException e) {
         }
     }
 
     @Override
-    public Result<Void> unsubscribeUser(String user, String userSub, String pwd) {
+    public Result<Void> unsubscribeUser(String user, String userSub, String pwd, Long version) {
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
@@ -297,13 +300,13 @@ public class RepFeeds implements RepFeedsInterface {
         try {
             Discovery d = Discovery.getInstance();
             URI userURI = d.knownUrisOf(subDomain, FEEDS_SERVICE);
-            FeedsClientFactory.get(userURI).unsubscribeUser(user, userSub, pwd);
+            RepFeedsClientFactory.get(userURI).unsubscribeUser(user, userSub, pwd, Long.MIN_VALUE);
         } catch (InterruptedException e) {
         }
     }
 
     @Override
-    public Result<List<String>> listSubs(String user) {
+    public Result<List<String>> listSubs(String user, Long version) {
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
@@ -327,7 +330,7 @@ public class RepFeeds implements RepFeedsInterface {
             Set<String> followings = following.get(user);
             if (followings != null) {
                 for (String sub : followings)
-                    executor.submit(() -> unsubscribeUser(nameDomain, sub, pwd));
+                    executor.submit(() -> unsubscribeUser(nameDomain, sub, pwd, Long.MIN_VALUE));
                 following.remove(user);
             }
 
@@ -366,7 +369,7 @@ public class RepFeeds implements RepFeedsInterface {
             Discovery d) {
         try {
             URI userURI = d.knownUrisOf(followerDomain, FEEDS_SERVICE);
-            FeedsClientFactory.get(userURI).deleteFeed(user, followerDomain, pwd);
+            RepFeedsClientFactory.get(userURI).deleteFeed(user, followerDomain, pwd);
         } catch (InterruptedException e) {
         }
     }

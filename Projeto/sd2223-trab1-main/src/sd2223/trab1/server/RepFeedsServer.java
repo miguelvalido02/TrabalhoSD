@@ -10,7 +10,8 @@ import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import sd2223.trab1.server.kafka.RepFeeds;
-import sd2223.trab1.server.rest.RestFeedsResource;
+import sd2223.trab1.server.kafka.RepFeedsInterface;
+import sd2223.trab1.server.kafka.RepFeedsResource;
 
 public class RepFeedsServer {
 
@@ -31,8 +32,10 @@ public class RepFeedsServer {
             int seq = Integer.parseInt(args[1]);
             Domain.setDomain(domain);
             Domain.setSeq(seq);
+            RepFeedsInterface rep = new RepFeeds();
+
             ResourceConfig config = new ResourceConfig();
-            config.register(new RestFeedsResource(new RepFeeds()));
+            config.register(new RepFeedsResource(rep));
 
             // String ip = InetAddress.getLocalHost().getHostAddress();
             String ip = InetAddress.getLocalHost().getHostName();

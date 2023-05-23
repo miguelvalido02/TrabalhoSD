@@ -33,10 +33,10 @@ public class RestClient {
     protected static final int MAX_RETRIES = 20;
 
     final URI serverURI;
-    final Client client;
+    protected final Client client;
     final ClientConfig config;
 
-    RestClient(URI serverURI) {
+    public RestClient(URI serverURI) {
         HttpsURLConnection.setDefaultHostnameVerifier(new InsecureHostnameVerifier()); // e necessario?
         this.serverURI = serverURI;
         this.config = new ClientConfig();
