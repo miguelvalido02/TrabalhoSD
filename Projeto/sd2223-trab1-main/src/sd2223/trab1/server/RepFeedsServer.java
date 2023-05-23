@@ -9,6 +9,7 @@ import javax.net.ssl.SSLContext;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
+import sd2223.trab1.server.kafka.RepFeeds;
 import sd2223.trab1.server.rest.RestFeedsResource;
 
 public class RepFeedsServer {
