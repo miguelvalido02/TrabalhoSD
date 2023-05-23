@@ -14,29 +14,31 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.server.Domain;
-import sd2223.trab1.api.java.Feeds;
 import sd2223.trab1.api.java.Result;
 import sd2223.trab1.server.Discovery;
 import sd2223.trab1.api.java.Result.ErrorCode;
 import sd2223.trab1.clients.FeedsClientFactory;
 import sd2223.trab1.clients.UsersClientFactory;
+import sd2223.trab1.server.kafka.sync.SyncPoint;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 
-public class RepFeeds implements Feeds {
+public class RepFeeds implements RepFeedsInterface {
 
     private static final String USERS_SERVICE = "users";
     private static final String FEEDS_SERVICE = "feeds";
 
     private int counter;
     private ClientConfig config;
+    private SyncPoint<Object> sync;
     private ExecutorService executor;
     private Map<String, Set<String>> following; // <username,<user@domain>>
     private Map<String, Map<Long, Message>> feeds;// <username,<mid,message>>
     private Map<String, Map<String, List<String>>> followers; // <username,<domain,<user@domain>>>
 
     public RepFeeds() {
+        sync = new SyncPoint<>();
         config = new ClientConfig();
         config.property(ClientProperties.READ_TIMEOUT, 5000);
         config.property(ClientProperties.CONNECT_TIMEOUT, 5000);
