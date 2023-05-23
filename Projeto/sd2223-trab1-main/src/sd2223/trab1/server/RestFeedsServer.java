@@ -9,6 +9,7 @@ import javax.net.ssl.SSLContext;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
+import sd2223.trab1.server.java.JavaFeeds;
 import sd2223.trab1.server.rest.RestFeedsResource;
 
 public class RestFeedsServer {
@@ -31,7 +32,7 @@ public class RestFeedsServer {
             Domain.setDomain(domain);
             Domain.setSeq(seq);
             ResourceConfig config = new ResourceConfig();
-            config.register(new RestFeedsResource());
+            config.register(new RestFeedsResource(new JavaFeeds()));
 
             // String ip = InetAddress.getLocalHost().getHostAddress();
             String ip = InetAddress.getLocalHost().getHostName();

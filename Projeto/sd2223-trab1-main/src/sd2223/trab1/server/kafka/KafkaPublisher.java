@@ -1,4 +1,4 @@
-package aula10.kafka;
+package sd2223.trab1.server.kafka;
 
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
@@ -24,10 +24,10 @@ public class KafkaPublisher {
 
 		return new KafkaPublisher(new KafkaProducer<String, String>(props));
 	}
-	
+
 	private final KafkaProducer<String, String> producer;
 
-	private KafkaPublisher( KafkaProducer<String, String> producer) {
+	private KafkaPublisher(KafkaProducer<String, String> producer) {
 		this.producer = producer;
 	}
 
@@ -44,7 +44,7 @@ public class KafkaPublisher {
 		}
 		return -1;
 	}
-	
+
 	public long publish(String topic, String value) {
 		try {
 			long offset = producer.send(new ProducerRecord<>(topic, value)).get().offset();
@@ -54,12 +54,5 @@ public class KafkaPublisher {
 		}
 		return -1;
 	}
-	
-	
-	public static void main(String[] args) throws Exception {
 
-		
-		
-		
-	}
 }
