@@ -1,7 +1,7 @@
 package sd2223.trab1.server.kafka.sync;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SyncPoint<T> {
 	private static SyncPoint<?> instance;
@@ -17,13 +17,13 @@ public class SyncPoint<T> {
 	private Map<Long, T> results;
 
 	public SyncPoint() {
-		results = new HashMap<>();
+		results = new ConcurrentHashMap<>();
 	}
 
 	/**
 	 * Waits for version to be at least equals to n
 	 */
-	public synchronized void waitForVersion(long n, int waitPeriod) {
+	public void waitForVersion(long n, int waitPeriod) {
 		while (version < n) {
 			try {
 				this.wait(waitPeriod);
@@ -36,7 +36,7 @@ public class SyncPoint<T> {
 	 * Assuming that results are added sequentially, returns null if the result is
 	 * not available.
 	 */
-	public synchronized T waitForResult(long n) {
+	public T waitForResult(long n) {
 		waitForVersion(n, Integer.MAX_VALUE);
 		return results.remove(n);
 	}
@@ -58,7 +58,7 @@ public class SyncPoint<T> {
 		this.notifyAll();
 	}
 
-	public synchronized String toString() {
+	public String toString() {
 		return results.keySet().toString();
 	}
 }
