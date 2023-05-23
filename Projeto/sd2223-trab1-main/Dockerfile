@@ -1,0 +1,21 @@
+# base ubuntu official image 
+#FROM ubuntu
+FROM nunopreguica/sd2223tpbase
+# run a command (install a package)
+RUN apt-get update && apt-get install iproute2 -y
+
+# Copy openjdk 17 from another image
+ENV JAVA_HOME=/opt/java/openjdk
+COPY --from=eclipse-temurin:17 $JAVA_HOME $JAVA_HOME
+ENV PATH=$PATH:$JAVA_HOME/bin
+
+# working directory inside docker image
+WORKDIR /home/sd
+
+COPY tls/*.jks /home/sd/
+
+# copy the jar created by assembly to the docker image
+COPY target/*jar-with-dependencies.jar sd2223.jar
+
+# copy the file of properties to the docker image
+COPY feeds.props feeds.props
