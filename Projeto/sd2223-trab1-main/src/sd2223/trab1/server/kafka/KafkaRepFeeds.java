@@ -61,14 +61,14 @@ public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
 
     public KafkaRepFeeds(SyncPoint<Object> sync) {
         this.sync = sync;
-        impl = new RepFeeds(sync);
+        impl = new RepFeeds();
+        sync = new SyncPoint<>();
         config = new ClientConfig();
         config.property(ClientProperties.READ_TIMEOUT, 5000);
         config.property(ClientProperties.CONNECT_TIMEOUT, 5000);
         publisher = KafkaPublisher.createPublisher(KAFKA_BROKERS);
         subscriber = KafkaSubscriber.createSubscriber(KAFKA_BROKERS, List.of(TOPIC), FROM_BEGINNING);
         subscriber.start(false, this);
-        sync = new SyncPoint<>();
 
     }
 

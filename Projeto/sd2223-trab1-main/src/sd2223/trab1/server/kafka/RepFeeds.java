@@ -14,7 +14,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.server.Domain;
-import sd2223.trab1.server.kafka.sync.SyncPoint;
 import sd2223.trab1.api.java.Result;
 import sd2223.trab1.server.Discovery;
 import sd2223.trab1.api.java.Result.ErrorCode;
@@ -29,24 +28,21 @@ public class RepFeeds implements RepFeedsInterface {
     private static final String FEEDS_SERVICE = "feeds";
 
     private int counter;
-    private SyncPoint<Object> sync;
     private ClientConfig config;
     private ExecutorService executor;
     private Map<String, Set<String>> following; // <username,<user@domain>>
     private Map<String, Map<Long, Message>> feeds;// <username,<mid,message>>
     private Map<String, Map<String, List<String>>> followers; // <username,<domain,<user@domain>>>
 
-    public RepFeeds(SyncPoint<Object> sync) {
-        this.sync = sync;
+    public RepFeeds() {
+        this.counter = 0;
         config = new ClientConfig();
+        executor = Executors.newFixedThreadPool(50);
         config.property(ClientProperties.READ_TIMEOUT, 5000);
         config.property(ClientProperties.CONNECT_TIMEOUT, 5000);
         this.following = new ConcurrentHashMap<String, Set<String>>();
         this.feeds = new ConcurrentHashMap<String, Map<Long, Message>>();
         this.followers = new ConcurrentHashMap<String, Map<String, List<String>>>();
-        executor = Executors.newFixedThreadPool(50);
-        this.counter = 0;
-
     }
 
     @Override
