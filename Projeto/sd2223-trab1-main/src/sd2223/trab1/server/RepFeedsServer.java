@@ -10,8 +10,9 @@ import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import sd2223.trab1.server.kafka.KafkaRepFeeds;
-import sd2223.trab1.server.kafka.RepFeedsInterface;
+import sd2223.trab1.server.kafka.KafkaRepFeedsInterface;
 import sd2223.trab1.server.kafka.RepFeedsResource;
+import sd2223.trab1.server.kafka.VersionFilter;
 import sd2223.trab1.server.kafka.sync.SyncPoint;
 
 public class RepFeedsServer {
@@ -35,7 +36,7 @@ public class RepFeedsServer {
             Domain.setSeq(seq);
             SyncPoint<Object> sync = new SyncPoint<>();
             ResourceConfig config = new ResourceConfig();
-            RepFeedsInterface rep = new KafkaRepFeeds(sync);
+            KafkaRepFeedsInterface rep = new KafkaRepFeeds(sync);
             config.register(new RepFeedsResource(rep));
             config.register(new VersionFilter(sync));
 

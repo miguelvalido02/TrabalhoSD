@@ -13,7 +13,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.client.WebTarget;
 
-public class RepFeedsClient extends RestClient implements RepFeedsInterface {
+public class RepFeedsClient extends RestClient implements KafkaRepFeedsInterface {
 
     final WebTarget target;
 

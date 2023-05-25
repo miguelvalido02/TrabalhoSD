@@ -58,6 +58,10 @@ public class SyncPoint<T> {
 		this.notifyAll();
 	}
 
+	public synchronized long getVersion() {
+		return this.version;
+	}
+
 	public String toString() {
 		return results.keySet().toString();
 	}

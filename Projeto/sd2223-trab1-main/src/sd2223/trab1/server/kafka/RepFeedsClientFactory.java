@@ -7,13 +7,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RepFeedsClientFactory {
 
     private static final String REST = "/rest";
-    private static Map<String, RepFeedsInterface> clients = new ConcurrentHashMap<String, RepFeedsInterface>();
+    private static Map<String, KafkaRepFeedsInterface> clients = new ConcurrentHashMap<String, KafkaRepFeedsInterface>();
 
-    public static RepFeedsInterface get(URI serverURI) {
+    public static KafkaRepFeedsInterface get(URI serverURI) {
         var uriString = serverURI.toString();
         if (clients.containsKey(uriString))
             return clients.get(uriString);
-        RepFeedsInterface newFeedClient = null;
+        KafkaRepFeedsInterface newFeedClient = null;
         if (uriString.endsWith(REST)) {
             clients.put(uriString, newFeedClient = new RepFeedsClient(serverURI));
             return newFeedClient;

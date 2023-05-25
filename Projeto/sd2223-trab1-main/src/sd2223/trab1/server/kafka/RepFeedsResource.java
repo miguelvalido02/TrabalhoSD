@@ -5,9 +5,9 @@ import sd2223.trab1.api.Message;
 import sd2223.trab1.server.rest.RestResource;
 
 public class RepFeedsResource extends RestResource implements RepFeedsService {
-    final RepFeedsInterface impl;
+    final KafkaRepFeedsInterface impl;
 
-    public RepFeedsResource(RepFeedsInterface impl) {
+    public RepFeedsResource(KafkaRepFeedsInterface impl) {
         this.impl = impl;
     }
 
