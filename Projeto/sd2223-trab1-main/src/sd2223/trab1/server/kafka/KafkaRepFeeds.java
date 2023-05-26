@@ -1,8 +1,6 @@
 package sd2223.trab1.server.kafka;
 
 import java.net.URI;
-import java.util.Map;
-import java.util.Set;
 import java.util.List;
 
 import sd2223.trab1.api.Message;
@@ -13,28 +11,11 @@ import sd2223.trab1.server.kafka.sync.SyncPoint;
 import sd2223.trab1.server.util.JSON;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.glassfish.hk2.api.ErrorType;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
-
-import java.util.stream.Collectors;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import sd2223.trab1.api.User;
-import sd2223.trab1.api.Message;
-import sd2223.trab1.server.Domain;
-import sd2223.trab1.api.java.Result;
 import sd2223.trab1.server.Discovery;
 import sd2223.trab1.api.java.Result.ErrorCode;
 import sd2223.trab1.clients.UsersClientFactory;
-
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
 
 public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
 
@@ -72,6 +53,7 @@ public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
 
     }
 
+    // TODO -> metodos para isto
     @Override
     public void onReceive(ConsumerRecord<String, String> r) {
         String object = r.value();
@@ -90,13 +72,18 @@ public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
                 sync.setResult(r.offset(), impl.removeFromPersonalFeed(res[0], Long.valueOf(res[1])));
                 break;
             case DELETE_FEED:
+                String[] userAndPwd = this.getUserAndPwd(object);
+                sync.setResult(r.offset(), impl.deleteFeed(userAndPwd[0], userAndPwd[1], userAndPwd[2]));
                 break;
             case SUB:
+                String[] usersAndPwd = this.getUsersAndPwd(object);
+                sync.setResult(r.offset(), impl.subUser(usersAndPwd[0], usersAndPwd[1], usersAndPwd[2]));
                 break;
             case UNSUB:
+                String[] usersAndpwd = this.getUsersAndPwd(object);
+                sync.setResult(r.offset(), impl.unsubscribeUser(usersAndpwd[0], usersAndpwd[1], usersAndpwd[2]));
                 break;
         }
-
     }
 
     @Override
@@ -123,7 +110,7 @@ public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
         String msgEncoded = JSON.encode(msg);
         long offset = publisher.publish(TOPIC, POST_OUTSIDE, msgEncoded);
         sync.waitForResult(offset);
-        return Result.ok();
+        return Result.ok(); // TODO
     }
 
     @Override
@@ -135,10 +122,10 @@ public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
         String domain = nameDomain[1];
         Result<User> u = verifyUser(name, domain, pwd);
         if (u.isOK()) {
-            String msgEncoded = JSON.encode(name + "@" + String.valueOf(mid));
-            long offset = publisher.publish(TOPIC, REMOVE, msgEncoded);
+            String nameAndMidEncoded = JSON.encode(name + "@" + String.valueOf(mid));
+            long offset = publisher.publish(TOPIC, REMOVE, nameAndMidEncoded);
             sync.waitForResult(offset);
-            return Result.ok();
+            return Result.ok(); // TODO
         }
         return Result.error(u.error());
 
@@ -195,25 +182,80 @@ public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
 
     @Override
     public Result<Void> subUser(String user, String userSub, String pwd, Long version) {
-        if (version != null)
+        String[] nameDomain = user.split("@");
+        String name = nameDomain[0];
+        String domain = nameDomain[1];
+
+        String[] nameDomainSub = userSub.split("@");
+        String nameSub = nameDomainSub[0];
+        String domainSub = nameDomainSub[1];
+
+        if (version != null && Domain.getDomain().equals(domain))
             sync.waitForVersion(version, Integer.MAX_VALUE);
+        // Garantir que o userSub existe (pedido ao servico users)
+        Result<User> uf = findUser(domainSub, nameSub);
+        if (uf.isOK()) {
+            // Garantir que o user existe
+            Result<User> uv = verifyUser(name, domain, pwd);
+            if (uv.isOK()) {
+                String usersAndPwdEncoded = JSON.encode(user + "@" + userSub + "@" + pwd);
+                long offset = publisher.publish(TOPIC, SUB, usersAndPwdEncoded);
+                sync.waitForResult(offset);
+                return Result.ok(); // TODO
+            }
+            return Result.error(uv.error());
+        }
+        return Result.error(uf.error());
     }
 
     @Override
     public Result<Void> unsubscribeUser(String user, String userSub, String pwd, Long version) {
-        if (version != null)
+        String[] nameDomain = user.split("@");
+        String name = nameDomain[0];
+        String domain = nameDomain[1];
+
+        String[] nameDomainSub = userSub.split("@");
+        String nameSub = nameDomainSub[0];
+        String domainSub = nameDomainSub[1];
+
+        if (version != null && Domain.getDomain().equals(domain))
             sync.waitForVersion(version, Integer.MAX_VALUE);
+        // Garantir que o user existe
+        Result<User> uv = verifyUser(name, domain, pwd);
+        if (uv.isOK()) {
+            // Garantir que o userSub existe (pedido ao servico users)
+            Result<User> uf = findUser(domainSub, nameSub);
+            if (uf.isOK()) {
+                String usersAndPwdEncoded = JSON.encode(user + "@" + userSub + "@" + pwd);
+                long offset = publisher.publish(TOPIC, UNSUB, usersAndPwdEncoded);
+                sync.waitForResult(offset);
+                return Result.ok(); // TODO
+            }
+            return Result.error(uf.error());
+        }
+        return Result.error(uv.error());
     }
 
     @Override
     public Result<List<String>> listSubs(String user, Long version) {
-        if (version != null)
+        String[] nameDomain = user.split("@");
+        String name = nameDomain[0];
+        String domain = nameDomain[1];
+        if (version != null && Domain.getDomain().equals(domain))
             sync.waitForVersion(version, Integer.MAX_VALUE);
+        // Garantir que o user existe (pedido ao servico users)
+        Result<User> u = findUser(domain, name);
+        if (u.isOK())
+            return impl.listSubs(name);
+        return Result.error(u.error());
     }
 
     @Override
-    public Result<Void> deleteFeed(String user, String domain, String pwd) {
-        return null;
+    public Result<Void> deleteFeed(String name, String domain, String pwd) {
+        String nameDomainPwdEncoded = JSON.encode(name + "@" + domain + "@" + pwd);
+        long offset = publisher.publish(TOPIC, DELETE_FEED, nameDomainPwdEncoded);
+        sync.waitForResult(offset);
+        return Result.ok(); // TODO
     }
 
     private Result<User> verifyUser(String name, String domain, String pwd) {
@@ -234,5 +276,23 @@ public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
         } catch (InterruptedException e) {
         }
         return null;
+    }
+
+    private String[] getUsersAndPwd(String object) {
+        String usersAndPwd = JSON.decode(object, String.class);
+        String[] result = usersAndPwd.split("@", 5);
+        String user = result[0] + "@" + result[1];
+        String userSub = result[2] + "@" + result[3];
+        String pwd = result[4];
+        return new String[] { user, userSub, pwd };
+    }
+
+    private String[] getUserAndPwd(String object) {
+        String usersAndPwd = JSON.decode(object, String.class);
+        String[] result = usersAndPwd.split("@", 3);
+        String user = result[0];
+        String domain = result[1];
+        String pwd = result[2];
+        return new String[] { user, domain, pwd };
     }
 }

@@ -11,20 +11,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import sd2223.trab1.api.User;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.server.Domain;
 import sd2223.trab1.api.java.Result;
 import sd2223.trab1.server.Discovery;
 import sd2223.trab1.api.java.Result.ErrorCode;
-import sd2223.trab1.clients.UsersClientFactory;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 
 public class RepFeeds implements RepFeedsInterface {
-
-    private static final String USERS_SERVICE = "users";
     private static final String FEEDS_SERVICE = "feeds";
 
     private int counter;
@@ -118,8 +114,8 @@ public class RepFeeds implements RepFeedsInterface {
     }
 
     @Override
-    public Result<Void> removeFromPersonalFeed(String user, long mid) {
-        Map<Long, Message> feed = feeds.get(user);
+    public Result<Void> removeFromPersonalFeed(String name, long mid) {
+        Map<Long, Message> feed = feeds.get(name);
         if (feed == null || feed.get(mid) == null)
             return Result.error(ErrorCode.NOT_FOUND);
         feed.remove(mid);
@@ -153,35 +149,24 @@ public class RepFeeds implements RepFeedsInterface {
         String[] nameDomainSub = userSub.split("@");
         String nameSub = nameDomainSub[0];
         String domainSub = nameDomainSub[1];
-        // Garantir que o userSub existe (pedido ao servico users)
-        Result<User> uf = findUser(domainSub, nameSub);
-        if (uf.isOK()) {
-            // Garantir que o user existe
-            Result<User> uv = verifyUser(name, domain, pwd);
-            if (uv.isOK()) {
-                // User subscreve userSub
-                if (domain.equals(Domain.getDomain())) {
-                    Set<String> userFollowing = following.get(name);
-                    if (userFollowing == null)
-                        following.put(name, userFollowing = new CopyOnWriteArraySet<String>());
-                    userFollowing.add(userSub);
-                }
-                if (domainSub.equals(Domain.getDomain())) {
-                    Map<String, List<String>> subFollowers = followers.get(nameSub);
-                    if (subFollowers == null)
-                        followers.put(nameSub, subFollowers = new ConcurrentHashMap<String, List<String>>());
-                    List<String> followersInDomain = subFollowers.get(domain);
-                    if (followersInDomain == null)
-                        subFollowers.put(domain, followersInDomain = new CopyOnWriteArrayList<String>());
-                    followersInDomain.add(user);
-
-                } else
-                    executor.submit(() -> subOutside(domainSub, user, userSub, pwd));
-                return Result.ok();
-            }
-            return Result.error(uv.error());
+        // User subscreve userSub
+        if (domain.equals(Domain.getDomain())) {
+            Set<String> userFollowing = following.get(name);
+            if (userFollowing == null)
+                following.put(name, userFollowing = new CopyOnWriteArraySet<String>());
+            userFollowing.add(userSub);
         }
-        return Result.error(uf.error());
+        if (domainSub.equals(Domain.getDomain())) {
+            Map<String, List<String>> subFollowers = followers.get(nameSub);
+            if (subFollowers == null)
+                followers.put(nameSub, subFollowers = new ConcurrentHashMap<String, List<String>>());
+            List<String> followersInDomain = subFollowers.get(domain);
+            if (followersInDomain == null)
+                subFollowers.put(domain, followersInDomain = new CopyOnWriteArrayList<String>());
+            followersInDomain.add(user);
+        } else
+            executor.submit(() -> subOutside(domainSub, user, userSub, pwd));
+        return Result.ok();
     }
 
     private void subOutside(String subDomain, String user, String userSub, String pwd) {
@@ -202,35 +187,23 @@ public class RepFeeds implements RepFeedsInterface {
         String[] nameDomainSub = userSub.split("@");
         String nameSub = nameDomainSub[0];
         String domainSub = nameDomainSub[1];
-
-        // Garantir que o user existe
-        Result<User> uv = verifyUser(name, domain, pwd);
-        if (uv.isOK()) {
-            // Garantir que o userSub existe (pedido ao servico users)
-            Result<User> uf = findUser(domainSub, nameSub);
-            if (uf.isOK()) {
-                // Garantir que o user subscreve o sub
-                if (Domain.getDomain().equals(domain)) {
-                    Set<String> userFollowing = following.get(name);
-                    if (userFollowing == null || !userFollowing.contains(userSub))
-                        return Result.error(ErrorCode.NOT_FOUND);// 404 if the userSub is not subscribed
-                    userFollowing.remove(userSub);
-                }
-                // User deixa de subscrever userSub
-                if (Domain.getDomain().equals(domainSub)) {
-                    Map<String, List<String>> subFollowers = followers.get(nameSub);
-                    List<String> subFollowersInDomain = null;
-                    if (subFollowers == null || (subFollowersInDomain = subFollowers.get(domain)) == null
-                            || !subFollowersInDomain.contains(user))
-                        return Result.error(ErrorCode.NOT_FOUND);// 404 if the userSub is not subscribed
-                    subFollowersInDomain.remove(user);
-                } else
-                    executor.submit(() -> unsubOutside(domainSub, user, userSub, pwd));
-                return Result.ok();
-            }
-            return Result.error(uf.error());
+        if (Domain.getDomain().equals(domain)) {
+            Set<String> userFollowing = following.get(name);
+            if (userFollowing == null || !userFollowing.contains(userSub))
+                return Result.error(ErrorCode.NOT_FOUND);// 404 if the userSub is not subscribed
+            userFollowing.remove(userSub);
         }
-        return Result.error(uv.error());
+        // User deixa de subscrever userSub
+        if (Domain.getDomain().equals(domainSub)) {
+            Map<String, List<String>> subFollowers = followers.get(nameSub);
+            List<String> subFollowersInDomain = null;
+            if (subFollowers == null || (subFollowersInDomain = subFollowers.get(domain)) == null
+                    || !subFollowersInDomain.contains(user))
+                return Result.error(ErrorCode.NOT_FOUND);// 404 if the userSub is not subscribed
+            subFollowersInDomain.remove(user);
+        } else
+            executor.submit(() -> unsubOutside(domainSub, user, userSub, pwd));
+        return Result.ok();
     }
 
     private void unsubOutside(String subDomain, String user, String userSub, String pwd) {
@@ -243,35 +216,26 @@ public class RepFeeds implements RepFeedsInterface {
     }
 
     @Override
-    public Result<List<String>> listSubs(String user) {
-        String[] nameDomain = user.split("@");
-        String name = nameDomain[0];
-        String domain = nameDomain[1];
-
-        // Garantir que o user existe (pedido ao servico users)
-        Result<User> u = findUser(domain, name);
-        if (u.isOK()) {
-            if (following.get(name) == null)
-                return Result.ok(new CopyOnWriteArrayList<String>());
-            return Result.ok(new CopyOnWriteArrayList<String>(following.get(name)));
-        }
-        return Result.error(u.error());
+    public Result<List<String>> listSubs(String name) {
+        if (following.get(name) == null)
+            return Result.ok(new CopyOnWriteArrayList<String>());
+        return Result.ok(new CopyOnWriteArrayList<String>(following.get(name)));
     }
 
     @Override
-    public Result<Void> deleteFeed(String user, String domain, String pwd) {
-        String nameDomain = user + "@" + domain;
+    public Result<Void> deleteFeed(String name, String domain, String pwd) {
+        String nameDomain = name + "@" + domain;
         if (domain.equals(Domain.getDomain())) {
-            feeds.remove(user);
+            feeds.remove(name);
 
-            Set<String> followings = following.get(user);
+            Set<String> followings = following.get(name);
             if (followings != null) {
                 for (String sub : followings)
                     executor.submit(() -> unsubscribeUser(nameDomain, sub, pwd));
-                following.remove(user);
+                following.remove(name);
             }
 
-            Map<String, List<String>> userFollowers = followers.get(user);
+            Map<String, List<String>> userFollowers = followers.get(name);
             if (userFollowers != null) {
                 // tirar os followings do proprio dominio
                 List<String> followersInDomain = null;
@@ -291,9 +255,9 @@ public class RepFeeds implements RepFeedsInterface {
                 for (String followerDomain : userFollowers.keySet()) {
                     if (domain.equals(followerDomain))
                         continue;
-                    executor.submit(() -> requestDeleteOutsideDomain(user, domain, pwd, followerDomain, d));
+                    executor.submit(() -> requestDeleteOutsideDomain(name, domain, pwd, followerDomain, d));
                 }
-                followers.remove(user);
+                followers.remove(name);
             }
         } else {
             for (Set<String> followingList : following.values())
@@ -310,25 +274,4 @@ public class RepFeeds implements RepFeedsInterface {
         } catch (InterruptedException e) {
         }
     }
-
-    private Result<User> findUser(String domain, String name) {
-        Discovery d = Discovery.getInstance();
-        try {
-            URI userURI = d.knownUrisOf(domain, USERS_SERVICE);
-            return UsersClientFactory.get(userURI).userExists(name);
-        } catch (InterruptedException e) {
-        }
-        return null;
-    }
-
-    private Result<User> verifyUser(String name, String domain, String pwd) {
-        try {
-            Discovery d = Discovery.getInstance();
-            URI userURI = d.knownUrisOf(domain, USERS_SERVICE);
-            return UsersClientFactory.get(userURI).getUser(name, pwd);
-        } catch (InterruptedException e) {
-        }
-        return null;
-    }
-
 }

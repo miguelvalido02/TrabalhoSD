@@ -13,15 +13,15 @@ public interface RepFeedsInterface {
 
     Result<Void> removeFromPersonalFeed(String user, long mid);
 
-    Result<Message> getMessage(String user, long mid);
+    Result<Message> getMessage(String name, long mid);
 
-    Result<List<Message>> getMessages(String user, long time);
+    Result<List<Message>> getMessages(String name, long time);
 
     Result<Void> subUser(String user, String userSub, String pwd);
 
     Result<Void> unsubscribeUser(String user, String userSub, String pwd);
 
-    Result<List<String>> listSubs(String user);
+    Result<List<String>> listSubs(String name);
 
     Result<Void> deleteFeed(String user, String domain, String pwd);
 }
