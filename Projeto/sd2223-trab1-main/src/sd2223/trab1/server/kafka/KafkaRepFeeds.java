@@ -3,42 +3,44 @@ package sd2223.trab1.server.kafka;
 import java.net.URI;
 import java.util.List;
 
-import sd2223.trab1.api.Message;
 import sd2223.trab1.api.User;
-import sd2223.trab1.api.java.Result;
+import sd2223.trab1.api.Message;
 import sd2223.trab1.server.Domain;
-import sd2223.trab1.server.kafka.sync.SyncPoint;
+import sd2223.trab1.api.java.Result;
 import sd2223.trab1.server.util.JSON;
+import sd2223.trab1.server.kafka.sync.SyncPoint;
 
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
 import sd2223.trab1.server.Discovery;
 import sd2223.trab1.api.java.Result.ErrorCode;
 import sd2223.trab1.clients.UsersClientFactory;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+
+/*This class receives requests from clients, publishes on Kafka and executes the operation
+ * via RepFeeds class
+*/
 
 public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
 
-    private static final String FROM_BEGINNING = "earliest";
-    private static final String KAFKA_BROKERS = "kafka:9092";
     private static final String TOPIC = "topic";
     private static final String USERS_SERVICE = "users";
     private static final String FEEDS_SERVICE = "feeds";
+    private static final String FROM_BEGINNING = "earliest";
+    private static final String KAFKA_BROKERS = "kafka:9092";
 
-    private static final String POST_MESSAGE = "p";
-    private static final String POST_OUTSIDE = "o";
-    private static final String DELETE_FEED = "d";
     private static final String SUB = "s";
     private static final String UNSUB = "u";
     private static final String REMOVE = "r";
+    private static final String DELETE_FEED = "d";
+    private static final String POST_MESSAGE = "p";
+    private static final String POST_OUTSIDE = "o";
 
-    private ClientConfig config;
-    private KafkaSubscriber subscriber;
-    private KafkaPublisher publisher;
-    private SyncPoint<Object> sync;
     private RepFeeds impl;
-
-    // Faz publish no kafka e fala com os clientes
+    private ClientConfig config;
+    private SyncPoint<Object> sync;
+    private KafkaPublisher publisher;
+    private KafkaSubscriber subscriber;
 
     public KafkaRepFeeds(SyncPoint<Object> sync) {
         this.sync = sync;
@@ -50,10 +52,8 @@ public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
         publisher = KafkaPublisher.createPublisher(KAFKA_BROKERS);
         subscriber = KafkaSubscriber.createSubscriber(KAFKA_BROKERS, List.of(TOPIC), FROM_BEGINNING);
         subscriber.start(false, this);
-
     }
 
-    // TODO -> metodos para isto
     @Override
     public void onReceive(ConsumerRecord<String, String> r) {
         String object = r.value();
@@ -110,10 +110,11 @@ public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
         String msgEncoded = JSON.encode(msg);
         long offset = publisher.publish(TOPIC, POST_OUTSIDE, msgEncoded);
         sync.waitForResult(offset);
-        return Result.ok(); // TODO
+        return Result.ok();
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Result<Void> removeFromPersonalFeed(String user, long mid, String pwd, Long version) {
         if (version != null)
             sync.waitForVersion(version, Integer.MAX_VALUE);
@@ -124,8 +125,7 @@ public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
         if (u.isOK()) {
             String nameAndMidEncoded = JSON.encode(name + "@" + String.valueOf(mid));
             long offset = publisher.publish(TOPIC, REMOVE, nameAndMidEncoded);
-            sync.waitForResult(offset);
-            return Result.ok(); // TODO
+            return (Result<Void>) sync.waitForResult(offset);
         }
         return Result.error(u.error());
 
@@ -177,7 +177,6 @@ public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
         } catch (InterruptedException e) {
         }
         return null;
-
     }
 
     @Override
@@ -201,7 +200,7 @@ public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
                 String usersAndPwdEncoded = JSON.encode(user + "@" + userSub + "@" + pwd);
                 long offset = publisher.publish(TOPIC, SUB, usersAndPwdEncoded);
                 sync.waitForResult(offset);
-                return Result.ok(); // TODO
+                return Result.ok();
             }
             return Result.error(uv.error());
         }
@@ -209,6 +208,7 @@ public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Result<Void> unsubscribeUser(String user, String userSub, String pwd, Long version) {
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
@@ -228,8 +228,7 @@ public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
             if (uf.isOK()) {
                 String usersAndPwdEncoded = JSON.encode(user + "@" + userSub + "@" + pwd);
                 long offset = publisher.publish(TOPIC, UNSUB, usersAndPwdEncoded);
-                sync.waitForResult(offset);
-                return Result.ok(); // TODO
+                return (Result<Void>) sync.waitForResult(offset);
             }
             return Result.error(uf.error());
         }
@@ -255,7 +254,7 @@ public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
         String nameDomainPwdEncoded = JSON.encode(name + "@" + domain + "@" + pwd);
         long offset = publisher.publish(TOPIC, DELETE_FEED, nameDomainPwdEncoded);
         sync.waitForResult(offset);
-        return Result.ok(); // TODO
+        return Result.ok();
     }
 
     private Result<User> verifyUser(String name, String domain, String pwd) {
