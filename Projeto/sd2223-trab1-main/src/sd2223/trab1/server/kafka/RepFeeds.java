@@ -118,74 +118,30 @@ public class RepFeeds implements RepFeedsInterface {
     }
 
     @Override
-    public Result<Void> removeFromPersonalFeed(String user, long mid, String pwd) {
-        String[] nameDomain = user.split("@");
-        String name = nameDomain[0];
-        String domain = nameDomain[1];
-        Result<User> u = verifyUser(name, domain, pwd);
-        if (u.isOK()) {
-            Map<Long, Message> feed = feeds.get(name);
-            if (feed == null || feed.get(mid) == null)
-                return Result.error(ErrorCode.NOT_FOUND);
-            feed.remove(mid);
-            return Result.ok();
-        }
-        return Result.error(u.error());
+    public Result<Void> removeFromPersonalFeed(String user, long mid) {
+        Map<Long, Message> feed = feeds.get(user);
+        if (feed == null || feed.get(mid) == null)
+            return Result.error(ErrorCode.NOT_FOUND);
+        feed.remove(mid);
+        return Result.ok();
     }
 
     @Override
-    public Result<Message> getMessage(String user, long mid) {
-        String[] nameDomain = user.split("@");
-        String name = nameDomain[0];
-        String domain = nameDomain[1];
-        try {
-            if (Domain.getDomain().equals(domain)) {
-                // Verificar que o user existe
-                Result<User> u = findUser(domain, name);
-                if (u.isOK()) {
-                    Map<Long, Message> userFeed = feeds.get(name);
-                    if (userFeed == null || userFeed.get(mid) == null)
-                        return Result.error(ErrorCode.NOT_FOUND);// 404 message does not exist
-                    return Result.ok(userFeed.get(mid));
-                }
-                return Result.error(u.error());
-
-            } else {
-                Discovery d = Discovery.getInstance();
-                URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
-                return RepFeedsClientFactory.get(userURI).getMessage(user, mid, new Long(0)); // coisa mega feia
-            }
-        } catch (InterruptedException e) {
-        }
-        return null;
+    public Result<Message> getMessage(String name, long mid) {
+        Map<Long, Message> userFeed = feeds.get(name);
+        if (userFeed == null || userFeed.get(mid) == null)
+            return Result.error(ErrorCode.NOT_FOUND);// 404 message does not exist
+        return Result.ok(userFeed.get(mid));
     }
 
     @Override
-    public Result<List<Message>> getMessages(String user, long time) {
-        String[] nameDomain = user.split("@");
-        String name = nameDomain[0];
-        String domain = nameDomain[1];
-        try {
-            if (Domain.getDomain().equals(domain)) {
-                // Verificar que o user existe
-                Result<User> u = findUser(domain, name);
-                if (u.isOK()) {
-                    Map<Long, Message> userFeed = feeds.get(name);
-                    if (userFeed == null) {
-                        return Result.ok(new CopyOnWriteArrayList<Message>());
-                    }
-                    return Result.ok(userFeed.values().stream().filter(m -> m.getCreationTime() > time)
-                            .collect(Collectors.toList()));
-                } else
-                    return Result.error(u.error());
-            } else {
-                Discovery d = Discovery.getInstance();
-                URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
-                return RepFeedsClientFactory.get(userURI).getMessages(user, time, new Long(0));
-            }
-        } catch (InterruptedException e) {
+    public Result<List<Message>> getMessages(String name, long time) {
+        Map<Long, Message> userFeed = feeds.get(name);
+        if (userFeed == null) {
+            return Result.ok(new CopyOnWriteArrayList<Message>());
         }
-        return null;
+        return Result.ok(userFeed.values().stream().filter(m -> m.getCreationTime() > time)
+                .collect(Collectors.toList()));
     }
 
     @Override

@@ -81,14 +81,19 @@ public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
                 sync.setResult(r.offset(), impl.postMessage(msg.getUser() + "@" + msg.getDomain(), msg));
                 break;
             case POST_OUTSIDE:
+                Message m = JSON.decode(object, Message.class);
+                sync.setResult(r.offset(), impl.postOutside(m.getUser() + "@" + m.getDomain(), m));
+                break;
+            case REMOVE:
+                String nameAndMid = JSON.decode(object, String.class);
+                String[] res = nameAndMid.split("@");
+                sync.setResult(r.offset(), impl.removeFromPersonalFeed(res[0], Long.valueOf(res[1])));
                 break;
             case DELETE_FEED:
                 break;
             case SUB:
                 break;
             case UNSUB:
-                break;
-            case REMOVE:
                 break;
         }
 
@@ -115,37 +120,95 @@ public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
 
     @Override
     public Result<Void> postOutside(String user, Message msg) {
-        return null;
+        String msgEncoded = JSON.encode(msg);
+        long offset = publisher.publish(TOPIC, POST_OUTSIDE, msgEncoded);
+        sync.waitForResult(offset);
+        return Result.ok();
     }
 
     @Override
     public Result<Void> removeFromPersonalFeed(String user, long mid, String pwd, Long version) {
-        return null;
+        if (version != null)
+            sync.waitForVersion(version, Integer.MAX_VALUE);
+        String[] nameDomain = user.split("@");
+        String name = nameDomain[0];
+        String domain = nameDomain[1];
+        Result<User> u = verifyUser(name, domain, pwd);
+        if (u.isOK()) {
+            String msgEncoded = JSON.encode(name + "@" + String.valueOf(mid));
+            long offset = publisher.publish(TOPIC, REMOVE, msgEncoded);
+            sync.waitForResult(offset);
+            return Result.ok();
+        }
+        return Result.error(u.error());
+
     }
 
     @Override
     public Result<Message> getMessage(String user, long mid, Long version) {
+        String[] nameDomain = user.split("@");
+        String name = nameDomain[0];
+        String domain = nameDomain[1];
+        try {
+            if (Domain.getDomain().equals(domain)) {
+                if (version != null)
+                    sync.waitForVersion(version, Integer.MAX_VALUE);
+                // Verificar que o user existe
+                Result<User> u = findUser(domain, name);
+                if (u.isOK())
+                    return impl.getMessage(name, mid);
+                return Result.error(u.error());
+            } else {
+                Discovery d = Discovery.getInstance();
+                URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
+                return RepFeedsClientFactory.get(userURI).getMessage(user, mid, version);
+            }
+        } catch (InterruptedException e) {
+        }
         return null;
     }
 
     @Override
     public Result<List<Message>> getMessages(String user, long time, Long version) {
+        String[] nameDomain = user.split("@");
+        String name = nameDomain[0];
+        String domain = nameDomain[1];
+        try {
+            if (Domain.getDomain().equals(domain)) {
+                if (version != null)
+                    sync.waitForVersion(version, Integer.MAX_VALUE);
+                // Verificar que o user existe
+                Result<User> u = findUser(domain, name);
+                if (u.isOK())
+                    return impl.getMessages(name, time);
+                return Result.error(u.error());
+            } else {
+                Discovery d = Discovery.getInstance();
+                URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
+                return RepFeedsClientFactory.get(userURI).getMessages(user, time, version);
+            }
+        } catch (InterruptedException e) {
+        }
         return null;
+
     }
 
     @Override
     public Result<Void> subUser(String user, String userSub, String pwd, Long version) {
-        return null;
+        if (version != null)
+            sync.waitForVersion(version, Integer.MAX_VALUE);
     }
 
     @Override
     public Result<Void> unsubscribeUser(String user, String userSub, String pwd, Long version) {
-        return null;
+        if (version != null)
+            sync.waitForVersion(version, Integer.MAX_VALUE);
     }
 
     @Override
     public Result<List<String>> listSubs(String user, Long version) {
-        return null;
+        if (version != null)
+            sync.waitForVersion(version, Integer.MAX_VALUE);
     }
 
     @Override
@@ -158,6 +221,16 @@ public class KafkaRepFeeds implements KafkaRepFeedsInterface, RecordProcessor {
             Discovery d = Discovery.getInstance();
             URI userURI = d.knownUrisOf(domain, USERS_SERVICE);
             return UsersClientFactory.get(userURI).getUser(name, pwd);
+        } catch (InterruptedException e) {
+        }
+        return null;
+    }
+
+    private Result<User> findUser(String domain, String name) {
+        Discovery d = Discovery.getInstance();
+        try {
+            URI userURI = d.knownUrisOf(domain, USERS_SERVICE);
+            return UsersClientFactory.get(userURI).userExists(name);
         } catch (InterruptedException e) {
         }
         return null;

@@ -11,7 +11,7 @@ public interface RepFeedsInterface {
 
     Result<Void> postOutside(String user, Message msg);
 
-    Result<Void> removeFromPersonalFeed(String user, long mid, String pwd);
+    Result<Void> removeFromPersonalFeed(String user, long mid);
 
     Result<Message> getMessage(String user, long mid);
 
