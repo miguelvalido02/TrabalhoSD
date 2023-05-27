@@ -1,7 +1,5 @@
 package sd2223.trab1.server.kafka;
 
-import java.util.List;
-
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -12,6 +10,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import sd2223.trab1.api.Message;
 
 @Path(RepFeedsService.PATH)
@@ -47,7 +46,7 @@ public interface RepFeedsService {
         @Path("/{" + USER + "}")
         @Consumes(MediaType.APPLICATION_JSON)
         @Produces(MediaType.APPLICATION_JSON)
-        long postMessage(@PathParam(USER) String user, @QueryParam(PWD) String pwd, Message msg,
+        Response postMessage(@PathParam(USER) String user, @QueryParam(PWD) String pwd, Message msg,
                         @HeaderParam(HEADER_VERSION) Long version);
 
         /**
@@ -92,7 +91,7 @@ public interface RepFeedsService {
         @GET
         @Path("/{" + USER + "}/{" + MID + "}")
         @Produces(MediaType.APPLICATION_JSON)
-        Message getMessage(@PathParam(USER) String user, @PathParam(MID) long mid,
+        Response getMessage(@PathParam(USER) String user, @PathParam(MID) long mid,
                         @HeaderParam(HEADER_VERSION) Long version);
 
         /**
@@ -108,7 +107,7 @@ public interface RepFeedsService {
         @GET
         @Path("/{" + USER + "}")
         @Produces(MediaType.APPLICATION_JSON)
-        List<Message> getMessages(@PathParam(USER) String user, @QueryParam(TIME) long time,
+        Response getMessages(@PathParam(USER) String user, @QueryParam(TIME) long time,
                         @HeaderParam(HEADER_VERSION) Long version);
 
         /**
@@ -162,7 +161,7 @@ public interface RepFeedsService {
         @GET
         @Path("/sub/list/{" + USER + "}")
         @Produces(MediaType.APPLICATION_JSON)
-        List<String> listSubs(@PathParam(USER) String user, @HeaderParam(HEADER_VERSION) Long version);
+        Response listSubs(@PathParam(USER) String user, @HeaderParam(HEADER_VERSION) Long version);
 
         /**
          * Removes the feed of a user being deleted

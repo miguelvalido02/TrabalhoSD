@@ -37,9 +37,8 @@ public class KafkaPublisher {
 
 	public long publish(String topic, String key, String value) {
 		try {
-			long offset = producer.send(new ProducerRecord<>(topic, key, value)).get().offset();
-			return offset;
-		} catch (ExecutionException | InterruptedException x) {
+			return producer.send(new ProducerRecord<>(topic, key, value)).get().offset();
+		} catch (Exception x) {
 			x.printStackTrace();
 		}
 		return -1;

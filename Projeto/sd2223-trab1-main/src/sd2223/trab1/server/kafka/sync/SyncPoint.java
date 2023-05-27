@@ -47,6 +47,7 @@ public class SyncPoint<T> {
 	public synchronized void setResult(long n, T result) {
 		results.put(n, result);
 		version = n;
+		System.out.println("set result: " + results.get(n));
 		this.notifyAll();
 	}
 

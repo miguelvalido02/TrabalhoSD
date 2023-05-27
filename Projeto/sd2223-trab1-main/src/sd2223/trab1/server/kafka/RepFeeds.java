@@ -44,7 +44,7 @@ public class RepFeeds implements RepFeedsInterface {
     @Override
     public Result<Long> postMessage(String user, Message msg) {
         String name = user.split("@")[0];
-        long mid = 256 * counter + Domain.getSeq();
+        long mid = 256 * counter;
         counter++;
         msg.setId(mid);
         Map<Long, Message> userFeed = feeds.get(name);

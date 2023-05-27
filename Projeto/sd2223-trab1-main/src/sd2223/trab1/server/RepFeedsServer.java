@@ -10,10 +10,7 @@ import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import sd2223.trab1.server.kafka.KafkaRepFeeds;
-import sd2223.trab1.server.kafka.KafkaRepFeedsInterface;
-import sd2223.trab1.server.kafka.RepFeedsResource;
-import sd2223.trab1.server.kafka.VersionFilter;
-import sd2223.trab1.server.kafka.sync.SyncPoint;
+import sd2223.trab1.server.kafka.RepFeedsService;
 
 public class RepFeedsServer {
 
@@ -24,7 +21,7 @@ public class RepFeedsServer {
         System.setProperty("java.util.logging.SimpleFormatter.format", "%4$s: %5$s\n");
     }
 
-    public static final int PORT = 9092;
+    public static final int PORT = 8083;
     public static final String SERVICE = "feeds";
     private static final String SERVER_URI_FMT = "https://%s:%s/rest";
 
@@ -34,13 +31,9 @@ public class RepFeedsServer {
             int seq = Integer.parseInt(args[1]);
             Domain.setDomain(domain);
             Domain.setSeq(seq);
-            SyncPoint<Object> sync = new SyncPoint<>();
             ResourceConfig config = new ResourceConfig();
-            KafkaRepFeedsInterface rep = new KafkaRepFeeds(sync);
-            config.register(new RepFeedsResource(rep));
-            config.register(new VersionFilter(sync));
-
-            // String ip = InetAddress.getLocalHost().getHostAddress();
+            RepFeedsService rep = new KafkaRepFeeds();
+            config.register(rep);
             String ip = InetAddress.getLocalHost().getHostName();
             String serverURI = String.format(SERVER_URI_FMT, ip, PORT);
             URI uri = URI.create(serverURI);

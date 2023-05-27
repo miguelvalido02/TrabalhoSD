@@ -1,6 +1,6 @@
 package sd2223.trab1.server.kafka;
 
-import java.util.List;
+import jakarta.ws.rs.core.Response;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.server.rest.RestResource;
 
@@ -12,8 +12,9 @@ public class RepFeedsResource extends RestResource implements RepFeedsService {
     }
 
     @Override
-    public long postMessage(String user, String pwd, Message msg, Long version) {
-        return super.fromJavaResult(impl.postMessage(user, pwd, msg, version));
+    public Response postMessage(String user, String pwd, Message msg, Long version) {
+        return null;
+        // super.fromJavaResult(impl.postMessage(user, pwd, msg, version));
     }
 
     @Override
@@ -27,13 +28,15 @@ public class RepFeedsResource extends RestResource implements RepFeedsService {
     }
 
     @Override
-    public Message getMessage(String user, long mid, Long version) {
-        return super.fromJavaResult(impl.getMessage(user, mid, version));
+    public Response getMessage(String user, long mid, Long version) {
+        return null;
+        // return super.fromJavaResult(impl.getMessage(user, mid, version));
     }
 
     @Override
-    public List<Message> getMessages(String user, long time, Long version) {
-        return super.fromJavaResult(impl.getMessages(user, time, version));
+    public Response getMessages(String user, long time, Long version) {
+        return null;
+        // super.fromJavaResult(impl.getMessages(user, time, version));
     }
 
     @Override
@@ -47,8 +50,9 @@ public class RepFeedsResource extends RestResource implements RepFeedsService {
     }
 
     @Override
-    public List<String> listSubs(String user, Long version) {
-        return super.fromJavaResult(impl.listSubs(user, version));
+    public Response listSubs(String user, Long version) {
+        return null;
+        // super.fromJavaResult(impl.listSubs(user, version));
     }
 
     @Override

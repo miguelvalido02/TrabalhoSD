@@ -40,21 +40,22 @@ public class RepFeedsClient extends RestClient implements KafkaRepFeedsInterface
         return super.toJavaResult(r, Void.class);
     }
 
-    private Result<Message> clt_getMessage(String user, long mid, Long version) {
+    private Response clt_getMessage(String user, long mid, Long version) {
         Response r = target.path(user).path(Long.toString(mid)).request()
                 .header(RepFeedsService.HEADER_VERSION, version)
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
-
-        return super.toJavaResult(r, Message.class);
+        return null;
+        // return super.toJavaResult(r, Message.class);
     }
 
-    private Result<List<Message>> clt_getMessages(String user, long time, Long version) {
+    private Response clt_getMessages(String user, long time, Long version) {
         Response r = target.path(user)
                 .queryParam(FeedsService.TIME, time).request().header(RepFeedsService.HEADER_VERSION, version)
                 .accept(MediaType.APPLICATION_JSON).get();
-        return super.toJavaResult(r, new GenericType<List<Message>>() {
-        });
+        return null;
+        // super.toJavaResult(r, new GenericType<List<Message>>() {
+        // });
 
     }
 
@@ -73,14 +74,15 @@ public class RepFeedsClient extends RestClient implements KafkaRepFeedsInterface
         return super.toJavaResult(r, Void.class);
     }
 
-    private Result<List<String>> clt_listSubs(String user, Long version) {
+    private Response clt_listSubs(String user, Long version) {
         Response r = target.path("sub").path("list").path(user).request()
                 .header(RepFeedsService.HEADER_VERSION, version)
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
 
-        return super.toJavaResult(r, new GenericType<List<String>>() {
-        });
+        return null;
+        // super.toJavaResult(r, new GenericType<List<String>>() {
+        // });
     }
 
     private Result<Void> clt_postOutside(String user, Message msg) {
@@ -99,8 +101,8 @@ public class RepFeedsClient extends RestClient implements KafkaRepFeedsInterface
     }
 
     @Override
-    public Result<Long> postMessage(String user, String pwd, Message msg, Long version) {
-        return super.reTry(() -> clt_postMessage(user, pwd, msg, version));
+    public Response postMessage(String user, String pwd, Message msg, Long version) {
+        return null;
     }
 
     @Override
@@ -109,13 +111,15 @@ public class RepFeedsClient extends RestClient implements KafkaRepFeedsInterface
     }
 
     @Override
-    public Result<Message> getMessage(String user, long mid, Long version) {
-        return super.reTry(() -> clt_getMessage(user, mid, version));
+    public Response getMessage(String user, long mid, Long version) {
+        return null;
+        // super.reTry(() -> clt_getMessage(user, mid, version));
     }
 
     @Override
-    public Result<List<Message>> getMessages(String user, long time, Long version) {
-        return super.reTry(() -> clt_getMessages(user, time, version));
+    public Response getMessages(String user, long time, Long version) {
+        return null;
+        // super.reTry(() -> clt_getMessages(user, time, version));
     }
 
     @Override
@@ -129,8 +133,9 @@ public class RepFeedsClient extends RestClient implements KafkaRepFeedsInterface
     }
 
     @Override
-    public Result<List<String>> listSubs(String user, Long version) {
-        return super.reTry(() -> clt_listSubs(user, version));
+    public Response listSubs(String user, Long version) {
+        return null;
+        // super.reTry(() -> clt_listSubs(user, version));
     }
 
     @Override
