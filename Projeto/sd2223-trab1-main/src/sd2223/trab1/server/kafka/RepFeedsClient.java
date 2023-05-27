@@ -45,8 +45,7 @@ public class RepFeedsClient extends RestClient implements KafkaRepFeedsInterface
                 .header(RepFeedsService.HEADER_VERSION, version)
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
-        return null;
-        // return super.toJavaResult(r, Message.class);
+        return super.toJavaResult(r, Message.class);
     }
 
     private Response clt_getMessages(String user, long time, Long version) {
@@ -112,8 +111,7 @@ public class RepFeedsClient extends RestClient implements KafkaRepFeedsInterface
 
     @Override
     public Response getMessage(String user, long mid, Long version) {
-        return null;
-        // super.reTry(() -> clt_getMessage(user, mid, version));
+        return super.reTry(() -> clt_getMessage(user, mid, version));
     }
 
     @Override

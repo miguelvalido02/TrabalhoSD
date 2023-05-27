@@ -163,9 +163,6 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
                     else
                         throw new WebApplicationException(statusCodeFrom(res));
                 } else
-                    // return
-                    // Response.status(statusCodeFrom(u)).header(RepFeedsService.HEADER_VERSION,version).build();
-                    // // corrigir
                     throw new WebApplicationException(statusCodeFrom(u));
             } else {
                 Discovery d = Discovery.getInstance();
@@ -194,9 +191,6 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
                             .entity(res.value())
                             .header(RepFeedsService.HEADER_VERSION, version).build();
                 } else
-                    // return
-                    // Response.status(statusCodeFrom(u)).header(RepFeedsService.HEADER_VERSION,
-                    // version).build(); // corrigir
                     throw new WebApplicationException(statusCodeFrom(u));
             } else {
                 Discovery d = Discovery.getInstance();

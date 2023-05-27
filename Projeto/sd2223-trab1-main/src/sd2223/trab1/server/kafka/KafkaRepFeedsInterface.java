@@ -1,7 +1,5 @@
 package sd2223.trab1.server.kafka;
 
-import java.util.List;
-
 import jakarta.ws.rs.core.Response;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.java.Result;
