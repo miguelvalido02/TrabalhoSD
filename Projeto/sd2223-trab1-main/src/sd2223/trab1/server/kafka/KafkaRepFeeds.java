@@ -17,6 +17,7 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 
 import jakarta.inject.Singleton;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -155,11 +156,17 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
                 Result<User> u = findUser(domain, name);
                 if (u.isOK()) {
                     Result<Message> res = impl.getMessage(name, mid);
-                    return Response.status(200).encoding(MediaType.APPLICATION_JSON)
-                            .entity(res.value())
-                            .header(RepFeedsService.HEADER_VERSION, version).build();
+                    if (res.isOK())
+                        return Response.status(200).encoding(MediaType.APPLICATION_JSON)
+                                .entity(res.value())
+                                .header(RepFeedsService.HEADER_VERSION, version).build();
+                    else
+                        throw new WebApplicationException(statusCodeFrom(res));
                 } else
-                    return Response.status(statusCodeFrom(u)).header(RepFeedsService.HEADER_VERSION, version).build(); // corrigir
+                    // return
+                    // Response.status(statusCodeFrom(u)).header(RepFeedsService.HEADER_VERSION,version).build();
+                    // // corrigir
+                    throw new WebApplicationException(statusCodeFrom(u));
             } else {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
@@ -187,7 +194,10 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
                             .entity(res.value())
                             .header(RepFeedsService.HEADER_VERSION, version).build();
                 } else
-                    return Response.status(statusCodeFrom(u)).header(RepFeedsService.HEADER_VERSION, version).build(); // corrigir
+                    // return
+                    // Response.status(statusCodeFrom(u)).header(RepFeedsService.HEADER_VERSION,
+                    // version).build(); // corrigir
+                    throw new WebApplicationException(statusCodeFrom(u));
             } else {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
