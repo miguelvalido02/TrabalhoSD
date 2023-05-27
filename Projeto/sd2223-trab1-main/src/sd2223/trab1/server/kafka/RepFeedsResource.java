@@ -23,8 +23,9 @@ public class RepFeedsResource extends RestResource implements RepFeedsService {
     }
 
     @Override
-    public void removeFromPersonalFeed(String user, long mid, String pwd, Long version) {
-        super.fromJavaResult(impl.removeFromPersonalFeed(user, mid, pwd, version));
+    public Response removeFromPersonalFeed(String user, long mid, String pwd, Long version) {
+        return null;
+        // super.fromJavaResult(impl.removeFromPersonalFeed(user, mid, pwd, version));
     }
 
     @Override

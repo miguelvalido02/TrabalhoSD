@@ -76,7 +76,8 @@ public interface RepFeedsService {
          */
         @DELETE
         @Path("/{" + USER + "}/{" + MID + "}")
-        void removeFromPersonalFeed(@PathParam(USER) String user, @PathParam(MID) long mid, @QueryParam(PWD) String pwd,
+        Response removeFromPersonalFeed(@PathParam(USER) String user, @PathParam(MID) long mid,
+                        @QueryParam(PWD) String pwd,
                         @HeaderParam(HEADER_VERSION) Long version);
 
         /**

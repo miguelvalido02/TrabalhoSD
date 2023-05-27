@@ -23,7 +23,6 @@ import org.glassfish.jersey.client.ClientProperties;
 public class RepFeeds implements RepFeedsInterface {
     private static final String FEEDS_SERVICE = "feeds";
 
-    private int counter;
     private ClientConfig config;
     private ExecutorService executor;
     private Map<String, Set<String>> following; // <username,<user@domain>>
@@ -31,7 +30,6 @@ public class RepFeeds implements RepFeedsInterface {
     private Map<String, Map<String, List<String>>> followers; // <username,<domain,<user@domain>>>
 
     public RepFeeds() {
-        this.counter = 0;
         config = new ClientConfig();
         executor = Executors.newFixedThreadPool(50);
         config.property(ClientProperties.READ_TIMEOUT, 5000);
@@ -44,13 +42,10 @@ public class RepFeeds implements RepFeedsInterface {
     @Override
     public Result<Long> postMessage(String user, Message msg) {
         String name = user.split("@")[0];
-        long mid = 256 * counter;
-        counter++;
-        msg.setId(mid);
         Map<Long, Message> userFeed = feeds.get(name);
         if (userFeed == null)
             feeds.put(name, userFeed = new ConcurrentHashMap<Long, Message>());
-        userFeed.put(mid, msg);
+        userFeed.put(msg.getId(), msg);
 
         Map<String, List<String>> userFollowers = followers.get(name); // domain <nomeUser, User>
         if (userFollowers != null) {
@@ -59,7 +54,7 @@ public class RepFeeds implements RepFeedsInterface {
             // correr todos os seus seguidores e dar post no feed deles
             sendOutsideDomain(name, msg, userFollowers);
         }
-        return Result.ok(mid);
+        return Result.ok((Long) msg.getId());
     }
 
     private void postInDomain(String user, Message msg, Map<String, List<String>> userFollowers) {

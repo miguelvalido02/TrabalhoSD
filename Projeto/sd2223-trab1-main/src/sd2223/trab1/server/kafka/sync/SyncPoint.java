@@ -23,7 +23,7 @@ public class SyncPoint<T> {
 	/**
 	 * Waits for version to be at least equals to n
 	 */
-	public void waitForVersion(long n, int waitPeriod) {
+	public synchronized void waitForVersion(long n, int waitPeriod) {
 		while (version < n) {
 			try {
 				this.wait(waitPeriod);
@@ -36,7 +36,7 @@ public class SyncPoint<T> {
 	 * Assuming that results are added sequentially, returns null if the result is
 	 * not available.
 	 */
-	public T waitForResult(long n) {
+	public synchronized T waitForResult(long n) {
 		waitForVersion(n, Integer.MAX_VALUE);
 		return results.remove(n);
 	}
@@ -47,7 +47,6 @@ public class SyncPoint<T> {
 	public synchronized void setResult(long n, T result) {
 		results.put(n, result);
 		version = n;
-		System.out.println("set result: " + results.get(n));
 		this.notifyAll();
 	}
 
@@ -63,7 +62,7 @@ public class SyncPoint<T> {
 		return this.version;
 	}
 
-	public String toString() {
+	public synchronized String toString() {
 		return results.keySet().toString();
 	}
 }

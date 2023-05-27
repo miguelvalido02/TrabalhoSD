@@ -46,30 +46,27 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
     private SyncPoint<Object> sync;
     private KafkaPublisher publisher;
     private KafkaSubscriber subscriber;
+    private int counter;
 
     public KafkaRepFeeds() {
+        this.counter = 0;
         this.sync = new SyncPoint<Object>();
         impl = new RepFeeds();
         config = new ClientConfig();
         config.property(ClientProperties.READ_TIMEOUT, 5000);
         config.property(ClientProperties.CONNECT_TIMEOUT, 5000);
         publisher = KafkaPublisher.createPublisher(KAFKA_BROKERS);
-        subscriber = KafkaSubscriber.createSubscriber(KAFKA_BROKERS, List.of(TOPIC), FROM_BEGINNING);
+        subscriber = KafkaSubscriber.createSubscriber(KAFKA_BROKERS, List.of(TOPIC), FROM_BEGINNING); // ?
         subscriber.start(false, this);
     }
 
     @Override
     public void onReceive(ConsumerRecord<String, String> r) {
-        System.out.println("pedro");
         String object = r.value();
         switch (r.key()) {
             case POST_MESSAGE:
                 Message msg = JSON.decode(object, Message.class);
-                System.out.println("offset " + r.offset());
-                System.out.println(msg);
-                Result<Long> a = impl.postMessage(msg.getUser() + "@" + msg.getDomain(), msg);
-                System.out.println(a);
-                sync.setResult(r.offset(), a);
+                sync.setResult(r.offset(), impl.postMessage(msg.getUser() + "@" + msg.getDomain(), msg));
                 break;
             case POST_OUTSIDE:
                 Message m = JSON.decode(object, Message.class);
@@ -107,20 +104,17 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
             return Response.status(statusCodeFrom(Result.error(ErrorCode.BAD_REQUEST))).build();
         Result<User> u = verifyUser(name, domain, pwd);
         if (u.isOK()) {
+            long mid = 256 * counter + Domain.getSeq();
+            counter++;
+            msg.setId(mid);
             msg.setCreationTime(System.currentTimeMillis());
             String msgEncoded = JSON.encode(msg);
             long offset = publisher.publish(TOPIC, POST_MESSAGE, msgEncoded);
-            System.out.println("offset dentro do postMessage: " + offset);
-            System.out.println("msg: " + msgEncoded);
-            // return (Result<Long>) sync.waitForResult(offset);
             Result<Long> res = (Result<Long>) sync.waitForResult(offset);
-            System.out.println("pedro2");
             return Response.status(200).encoding(MediaType.APPLICATION_JSON)
                     .entity(res.value())
                     .header(RepFeedsService.HEADER_VERSION, version).build();
-
         }
-        System.out.println(u);
         return Response.status(statusCodeFrom(u)).build();
     }
 
@@ -132,7 +126,7 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
     }
 
     @Override
-    public void removeFromPersonalFeed(String user, long mid, String pwd, Long version) {
+    public Response removeFromPersonalFeed(String user, long mid, String pwd, Long version) {
         if (version != null)
             sync.waitForVersion(version, Integer.MAX_VALUE);
         String[] nameDomain = user.split("@");
@@ -142,9 +136,9 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
         if (u.isOK()) {
             String nameAndMidEncoded = JSON.encode(name + "@" + String.valueOf(mid));
             publisher.publish(TOPIC, REMOVE, nameAndMidEncoded);
-            // return (Result<Void>) sync.waitForResult(offset);
+            return Response.status(200).header(RepFeedsService.HEADER_VERSION, version).build();
         }
-        // return Result.error(u.error());
+        return Response.status(statusCodeFrom(u)).build();
     }
 
     @Override
