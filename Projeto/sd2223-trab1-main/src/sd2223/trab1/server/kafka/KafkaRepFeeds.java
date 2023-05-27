@@ -126,6 +126,7 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Response removeFromPersonalFeed(String user, long mid, String pwd, Long version) {
         if (version != null)
             sync.waitForVersion(version, Integer.MAX_VALUE);
@@ -135,8 +136,8 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
         Result<User> u = verifyUser(name, domain, pwd);
         if (u.isOK()) {
             String nameAndMidEncoded = JSON.encode(name + "@" + String.valueOf(mid));
-            publisher.publish(TOPIC, REMOVE, nameAndMidEncoded);
-            return Response.status(200).header(RepFeedsService.HEADER_VERSION, version).build();
+            Result<Void> res = (Result<Void>) sync.waitForResult(publisher.publish(TOPIC, REMOVE, nameAndMidEncoded));
+            return Response.status(statusCodeFrom(res)).header(RepFeedsService.HEADER_VERSION, version).build();
         }
         return Response.status(statusCodeFrom(u)).build();
     }
@@ -152,10 +153,13 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
                     sync.waitForVersion(version, Integer.MAX_VALUE);
                 // Verificar que o user existe
                 Result<User> u = findUser(domain, name);
-                if (u.isOK())
-                    return null;
-                // return impl.getMessage(name, mid);
-                // return Result.error(u.error());
+                if (u.isOK()) {
+                    Result<Message> res = impl.getMessage(name, mid);
+                    return Response.status(200).encoding(MediaType.APPLICATION_JSON)
+                            .entity(res.value())
+                            .header(RepFeedsService.HEADER_VERSION, version).build();
+                } else
+                    return Response.status(statusCodeFrom(u)).header(RepFeedsService.HEADER_VERSION, version).build(); // corrigir
             } else {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
@@ -177,10 +181,13 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
                     sync.waitForVersion(version, Integer.MAX_VALUE);
                 // Verificar que o user existe
                 Result<User> u = findUser(domain, name);
-                if (u.isOK())
-                    return null;
-                // return impl.getMessages(name, time);
-                // return Result.error(u.error());
+                if (u.isOK()) {
+                    Result<List<Message>> res = impl.getMessages(name, time);
+                    return Response.status(200).encoding(MediaType.APPLICATION_JSON)
+                            .entity(res.value())
+                            .header(RepFeedsService.HEADER_VERSION, version).build();
+                } else
+                    return Response.status(statusCodeFrom(u)).header(RepFeedsService.HEADER_VERSION, version).build(); // corrigir
             } else {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
@@ -192,7 +199,8 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
     }
 
     @Override
-    public void subUser(String user, String userSub, String pwd, Long version) {
+    @SuppressWarnings("unchecked")
+    public Response subUser(String user, String userSub, String pwd, Long version) {
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
@@ -210,17 +218,17 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
             Result<User> uv = verifyUser(name, domain, pwd);
             if (uv.isOK()) {
                 String usersAndPwdEncoded = JSON.encode(user + "@" + userSub + "@" + pwd);
-                long offset = publisher.publish(TOPIC, SUB, usersAndPwdEncoded);
-                sync.waitForResult(offset);
-                // return Result.ok();
+                Result<Void> res = (Result<Void>) sync.waitForResult(publisher.publish(TOPIC, SUB, usersAndPwdEncoded));
+                return Response.status(statusCodeFrom(res)).header(RepFeedsService.HEADER_VERSION, version).build();
             }
-            // return Result.error(uv.error());
+            return Response.status(statusCodeFrom(uv)).header(RepFeedsService.HEADER_VERSION, version).build(); // corrigir
         }
-        // return Result.error(uf.error());
+        return Response.status(statusCodeFrom(uf)).header(RepFeedsService.HEADER_VERSION, version).build(); // corrigir
     }
 
     @Override
-    public void unsubscribeUser(String user, String userSub, String pwd, Long version) {
+    @SuppressWarnings("unchecked")
+    public Response unsubscribeUser(String user, String userSub, String pwd, Long version) {
         String[] nameDomain = user.split("@");
         String name = nameDomain[0];
         String domain = nameDomain[1];
@@ -238,12 +246,13 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
             Result<User> uf = findUser(domainSub, nameSub);
             if (uf.isOK()) {
                 String usersAndPwdEncoded = JSON.encode(user + "@" + userSub + "@" + pwd);
-                sync.waitForResult(publisher.publish(TOPIC, UNSUB, usersAndPwdEncoded));
-                // return (Result<Void>) sync.waitForResult(offset);
+                Result<Void> res = (Result<Void>) sync
+                        .waitForResult(publisher.publish(TOPIC, UNSUB, usersAndPwdEncoded));
+                return Response.status(statusCodeFrom(res)).header(RepFeedsService.HEADER_VERSION, version).build();
             }
-            // return Result.error(uf.error());
+            return Response.status(statusCodeFrom(uf)).header(RepFeedsService.HEADER_VERSION, version).build(); // corrigir
         }
-        // return Result.error(uv.error());
+        return Response.status(statusCodeFrom(uv)).header(RepFeedsService.HEADER_VERSION, version).build(); // corrigir
     }
 
     @Override
@@ -255,10 +264,13 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
             sync.waitForVersion(version, Integer.MAX_VALUE);
         // Garantir que o user existe (pedido ao servico users)
         Result<User> u = findUser(domain, name);
-        return null;
-        // if (u.isOK())
-        // return impl.listSubs(name);
-        // return Result.error(u.error());
+        if (u.isOK()) {
+            Result<List<String>> res = impl.listSubs(name);
+            return Response.status(200).encoding(MediaType.APPLICATION_JSON)
+                    .entity(res.value())
+                    .header(RepFeedsService.HEADER_VERSION, version).build();
+        }
+        return Response.status(statusCodeFrom(u)).header(RepFeedsService.HEADER_VERSION, version).build(); // corrigir
     }
 
     @Override
@@ -266,7 +278,6 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
         String nameDomainPwdEncoded = JSON.encode(name + "@" + domain + "@" + pwd);
         long offset = publisher.publish(TOPIC, DELETE_FEED, nameDomainPwdEncoded);
         sync.waitForResult(offset);
-        // return Result.ok();
     }
 
     private Result<User> verifyUser(String name, String domain, String pwd) {

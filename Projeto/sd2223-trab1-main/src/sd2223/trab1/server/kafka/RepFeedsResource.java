@@ -41,13 +41,15 @@ public class RepFeedsResource extends RestResource implements RepFeedsService {
     }
 
     @Override
-    public void subUser(String user, String userSub, String pwd, Long version) {
-        super.fromJavaResult(impl.subUser(user, userSub, pwd, version));
+    public Response subUser(String user, String userSub, String pwd, Long version) {
+        return null;
+        // super.fromJavaResult(impl.subUser(user, userSub, pwd, version));
     }
 
     @Override
-    public void unsubscribeUser(String user, String userSub, String pwd, Long version) {
-        super.fromJavaResult(impl.unsubscribeUser(user, userSub, pwd, version));
+    public Response unsubscribeUser(String user, String userSub, String pwd, Long version) {
+        return null;
+        // super.fromJavaResult(impl.unsubscribeUser(user, userSub, pwd, version));
     }
 
     @Override

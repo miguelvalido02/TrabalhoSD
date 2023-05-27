@@ -128,7 +128,7 @@ public interface RepFeedsService {
          */
         @POST
         @Path("/sub/{" + USER + "}/{" + USERSUB + "}")
-        void subUser(@PathParam(USER) String user, @PathParam(USERSUB) String userSub, @QueryParam(PWD) String pwd,
+        Response subUser(@PathParam(USER) String user, @PathParam(USERSUB) String userSub, @QueryParam(PWD) String pwd,
                         @HeaderParam(HEADER_VERSION) Long version);
 
         /**
@@ -148,7 +148,7 @@ public interface RepFeedsService {
          */
         @DELETE
         @Path("/sub/{" + USER + "}/{" + USERSUB + "}")
-        void unsubscribeUser(@PathParam(USER) String user, @PathParam(USERSUB) String userSub,
+        Response unsubscribeUser(@PathParam(USER) String user, @PathParam(USERSUB) String userSub,
                         @QueryParam(PWD) String pwd,
                         @HeaderParam(HEADER_VERSION) Long version);
 
