@@ -157,28 +157,28 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
                 // Verificar que o user existe
                 Result<User> u = findUser(domain, name);
                 if (u.isOK()) {
-                    return getResponse(impl.getMessage(name, mid), version);
-                    // Result<Message> res = impl.getMessage(name, mid);
+                    // return getResponse(impl.getMessage(name, mid), version);
+                    Result<Message> res = impl.getMessage(name, mid);
 
-                    // if (res.isOK())
-                    // return Response.status(200).encoding(MediaType.APPLICATION_JSON)
-                    // .entity(res.value())
-                    // .header(RepFeedsService.HEADER_VERSION, version).build();
-                    // else
-                    // throw new WebApplicationException(statusCodeFrom(res));
+                    if (res.isOK())
+                        return Response.status(200).encoding(MediaType.APPLICATION_JSON)
+                                .entity(res.value())
+                                .header(RepFeedsService.HEADER_VERSION, version).build();
+                    else
+                        throw new WebApplicationException(statusCodeFrom(res));
                 } else
                     throw new WebApplicationException(statusCodeFrom(u));
             } else {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
                 Result<Message> res = RepFeedsClientFactory.get(userURI).getMessage(user, mid, version);
-                return getResponse(res, version);// TODO versao vinda do res
-                // if (res.isOK())
-                // return Response.status(200).encoding(MediaType.APPLICATION_JSON)
-                // .entity(res.value())
-                // .header(RepFeedsService.HEADER_VERSION, version).build();
-                // else
-                // throw new WebApplicationException(statusCodeFrom(res));
+                // return getResponse(res, version);// TODO versao vinda do res
+                if (res.isOK())
+                    return Response.status(200).encoding(MediaType.APPLICATION_JSON)
+                            .entity(res.value())
+                            .header(RepFeedsService.HEADER_VERSION, version).build();
+                else
+                    throw new WebApplicationException(statusCodeFrom(res));
             }
         } catch (InterruptedException e) {
         }
@@ -198,23 +198,23 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
                 Result<User> u = findUser(domain, name);
                 if (u.isOK()) {
                     Result<List<Message>> res = impl.getMessages(name, time);
-                    return getResponse(res, version);
-                    // return Response.status(200).encoding(MediaType.APPLICATION_JSON)
-                    // .entity(res.value())
-                    // .header(RepFeedsService.HEADER_VERSION, version).build();
+                    // return getResponse(res, version);
+                    return Response.status(200).encoding(MediaType.APPLICATION_JSON)
+                            .entity(res.value())
+                            .header(RepFeedsService.HEADER_VERSION, version).build();
                 } else
                     throw new WebApplicationException(statusCodeFrom(u));
             } else {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
                 Result<List<Message>> res = RepFeedsClientFactory.get(userURI).getMessages(user, time, version);
-                return getResponse(res, version);// TODO version
-                // if (res.isOK())
-                // return Response.status(200).encoding(MediaType.APPLICATION_JSON)
-                // .entity(res.value())
-                // .header(RepFeedsService.HEADER_VERSION, version).build();
-                // else
-                // throw new WebApplicationException(statusCodeFrom(res));
+                // return getResponse(res, version);// TODO version
+                if (res.isOK())
+                    return Response.status(200).encoding(MediaType.APPLICATION_JSON)
+                            .entity(res.value())
+                            .header(RepFeedsService.HEADER_VERSION, version).build();
+                else
+                    throw new WebApplicationException(statusCodeFrom(res));
             }
         } catch (InterruptedException e) {
         }
@@ -345,14 +345,6 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
         if (res.isOK())
             return Response.status(200).encoding(MediaType.APPLICATION_JSON)
                     .entity(res.value())
-                    .header(RepFeedsService.HEADER_VERSION, version).build();
-        else
-            throw new WebApplicationException(statusCodeFrom(res));
-    }
-
-    private Response getVoidResponse(Result<Void> res, long version) {
-        if (res.isOK())
-            return Response.status(200)
                     .header(RepFeedsService.HEADER_VERSION, version).build();
         else
             throw new WebApplicationException(statusCodeFrom(res));
