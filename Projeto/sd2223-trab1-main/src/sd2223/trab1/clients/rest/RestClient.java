@@ -18,6 +18,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 
 import sd2223.trab1.api.java.Result.ErrorCode;
+import sd2223.trab1.server.kafka.RepFeedsService;
 import sd2223.trab1.tls.InsecureHostnameVerifier;
 
 import static sd2223.trab1.api.java.Result.error;
@@ -59,6 +60,21 @@ public class RestClient {
                 return Result.error(ErrorCode.INTERNAL_ERROR);
             }
         return Result.error(ErrorCode.TIMEOUT);
+    }
+
+    protected <T> Response reTrya(Supplier<Response> func, long version) {
+        for (int i = 0; i < MAX_RETRIES; i++)
+            try {
+                return func.get();
+            } catch (ProcessingException x) {
+                Log.fine("Timeout: " + x.getMessage());
+                sleep(RETRY_SLEEP);
+            } catch (Exception x) {
+                x.printStackTrace();
+                return Response.status(Status.INTERNAL_SERVER_ERROR).header(RepFeedsService.HEADER_VERSION, version)
+                        .build();
+            }
+        return Response.status(Status.BAD_REQUEST).header(RepFeedsService.HEADER_VERSION, version).build();
     }
 
     protected <T> Result<T> toJavaResult(Response r, Class<T> entityType) {
