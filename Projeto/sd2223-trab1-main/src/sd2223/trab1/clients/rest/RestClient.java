@@ -1,44 +1,42 @@
 package sd2223.trab1.clients.rest;
 
 import java.net.URI;
-import java.util.function.Supplier;
 import java.util.logging.Logger;
+import java.util.function.Supplier;
 
 import javax.net.ssl.HttpsURLConnection;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 
-import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
 import sd2223.trab1.api.java.Result;
 import jakarta.ws.rs.core.GenericType;
-import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.Response.Status;
 
 import sd2223.trab1.api.java.Result.ErrorCode;
-import sd2223.trab1.server.kafka.RepFeedsService;
 import sd2223.trab1.tls.InsecureHostnameVerifier;
 
-import static sd2223.trab1.api.java.Result.error;
 import static sd2223.trab1.api.java.Result.ok;
+import static sd2223.trab1.api.java.Result.error;
 
 public class RestClient {
     private static Logger Log = Logger.getLogger(RestClient.class.getName());
 
+    protected static final int MAX_RETRIES = 20;
+    protected static final int RETRY_SLEEP = 1000;
     protected static final int READ_TIMEOUT = 5000;
     protected static final int CONNECT_TIMEOUT = 5000;
 
-    protected static final int RETRY_SLEEP = 1000;
-    protected static final int MAX_RETRIES = 20;
-
     final URI serverURI;
-    protected final Client client;
     final ClientConfig config;
+    protected final Client client;
 
     public RestClient(URI serverURI) {
-        HttpsURLConnection.setDefaultHostnameVerifier(new InsecureHostnameVerifier()); // e necessario?
+        HttpsURLConnection.setDefaultHostnameVerifier(new InsecureHostnameVerifier());
         this.serverURI = serverURI;
         this.config = new ClientConfig();
 
@@ -62,7 +60,7 @@ public class RestClient {
         return Result.error(ErrorCode.TIMEOUT);
     }
 
-    protected <T> Response reTrya(Supplier<Response> func, long version) {
+    protected <T> Response reTryResponse(Supplier<Response> func) {
         for (int i = 0; i < MAX_RETRIES; i++)
             try {
                 return func.get();
@@ -71,10 +69,9 @@ public class RestClient {
                 sleep(RETRY_SLEEP);
             } catch (Exception x) {
                 x.printStackTrace();
-                return Response.status(Status.INTERNAL_SERVER_ERROR).header(RepFeedsService.HEADER_VERSION, version)
-                        .build();
+                return Response.status(Status.INTERNAL_SERVER_ERROR).build();
             }
-        return Response.status(Status.BAD_REQUEST).header(RepFeedsService.HEADER_VERSION, version).build();
+        return Response.status(Status.BAD_REQUEST).build();
     }
 
     protected <T> Result<T> toJavaResult(Response r, Class<T> entityType) {

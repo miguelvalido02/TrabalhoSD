@@ -32,23 +32,15 @@ public class SoapFeedsServer {
         Domain.setSeq(Integer.parseInt(args[1]));
         Log.setLevel(Level.INFO);
 
-        // String ip = InetAddress.getLocalHost().getHostAddress();
         String ip = InetAddress.getLocalHost().getHostName();
-
         var server = HttpsServer.create(new InetSocketAddress(ip, PORT), 0);
-
         server.setExecutor(Executors.newCachedThreadPool());
         server.setHttpsConfigurator(new HttpsConfigurator(SSLContext.getDefault()));
-
         var endpoint = Endpoint.create(new SoapFeedsWebService());
         endpoint.publish(server.createContext("/soap"));
-
         server.start();
 
         String serverURI = String.format(SERVER_BASE_URI, ip, PORT);
-
-        // Endpoint.publish(serverURI.replace(ip, "0.0.0.0"), new
-        // SoapFeedsWebService());
         Log.info(String.format("%s Soap Server ready @ %s\n", SERVICE_NAME, serverURI));
 
         Discovery d = Discovery.getInstance();

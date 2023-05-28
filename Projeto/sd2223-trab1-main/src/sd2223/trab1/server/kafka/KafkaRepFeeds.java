@@ -42,12 +42,12 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
     private static final String POST_MESSAGE = "p";
     private static final String POST_OUTSIDE = "o";
 
+    private int counter;
     private RepFeeds impl;
     private ClientConfig config;
     private SyncPoint<Object> sync;
     private KafkaPublisher publisher;
     private KafkaSubscriber subscriber;
-    private int counter;
 
     public KafkaRepFeeds() {
         this.counter = 0;
@@ -57,10 +57,11 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
         config.property(ClientProperties.READ_TIMEOUT, 5000);
         config.property(ClientProperties.CONNECT_TIMEOUT, 5000);
         publisher = KafkaPublisher.createPublisher(KAFKA_BROKERS);
-        subscriber = KafkaSubscriber.createSubscriber(KAFKA_BROKERS, List.of(TOPIC), FROM_BEGINNING); // ?
+        subscriber = KafkaSubscriber.createSubscriber(KAFKA_BROKERS, List.of(TOPIC), FROM_BEGINNING);
         subscriber.start(false, this);
     }
 
+    /* Defines how each incoming message from Kafka is processed */
     @Override
     public void onReceive(ConsumerRecord<String, String> r) {
         String object = r.value();
@@ -110,12 +111,8 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
             msg.setId(mid);
             msg.setCreationTime(System.currentTimeMillis());
             String msgEncoded = JSON.encode(msg);
-            long offset = publisher.publish(TOPIC, POST_MESSAGE, msgEncoded);
-            Result<Long> res = (Result<Long>) sync.waitForResult(offset);
+            Result<Long> res = (Result<Long>) sync.waitForResult(publisher.publish(TOPIC, POST_MESSAGE, msgEncoded));
             return getResponse(res, sync.getVersion());
-            // return Response.status(200).encoding(MediaType.APPLICATION_JSON)
-            // .entity(res.value())
-            // .header(RepFeedsService.HEADER_VERSION, version).build();
         }
         return Response.status(statusCodeFrom(u)).build();
     }
@@ -140,7 +137,7 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
             String nameAndMidEncoded = JSON.encode(name + "@" + String.valueOf(mid));
             Result<Void> res = (Result<Void>) sync.waitForResult(publisher.publish(TOPIC, REMOVE, nameAndMidEncoded));
             return Response.status(statusCodeFrom(res)).header(RepFeedsService.HEADER_VERSION,
-                    version).build();
+                    sync.getVersion()).build();
         }
         return Response.status(statusCodeFrom(u)).build();
     }
@@ -157,13 +154,11 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
                 // Verificar que o user existe
                 Result<User> u = findUser(domain, name);
                 if (u.isOK()) {
-                    // return getResponse(impl.getMessage(name, mid), version);
                     Result<Message> res = impl.getMessage(name, mid);
-
                     if (res.isOK())
                         return Response.status(200).encoding(MediaType.APPLICATION_JSON)
                                 .entity(res.value())
-                                .header(RepFeedsService.HEADER_VERSION, version).build();
+                                .header(RepFeedsService.HEADER_VERSION, sync.getVersion()).build();
                     else
                         throw new WebApplicationException(statusCodeFrom(res));
                 } else
@@ -171,14 +166,7 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
             } else {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
-                Result<Message> res = RepFeedsClientFactory.get(userURI).getMessage(user, mid, version);
-                // return getResponse(res, version);// TODO versao vinda do res
-                if (res.isOK())
-                    return Response.status(200).encoding(MediaType.APPLICATION_JSON)
-                            .entity(res.value())
-                            .header(RepFeedsService.HEADER_VERSION, version).build();
-                else
-                    throw new WebApplicationException(statusCodeFrom(res));
+                return RepFeedsClientFactory.get(userURI).getMessage(user, mid, version);
             }
         } catch (InterruptedException e) {
         }
@@ -198,23 +186,15 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
                 Result<User> u = findUser(domain, name);
                 if (u.isOK()) {
                     Result<List<Message>> res = impl.getMessages(name, time);
-                    // return getResponse(res, version);
                     return Response.status(200).encoding(MediaType.APPLICATION_JSON)
                             .entity(res.value())
-                            .header(RepFeedsService.HEADER_VERSION, version).build();
+                            .header(RepFeedsService.HEADER_VERSION, sync.getVersion()).build();
                 } else
                     throw new WebApplicationException(statusCodeFrom(u));
             } else {
                 Discovery d = Discovery.getInstance();
                 URI userURI = d.knownUrisOf(domain, FEEDS_SERVICE);
-                Result<List<Message>> res = RepFeedsClientFactory.get(userURI).getMessages(user, time, version);
-                // return getResponse(res, version);// TODO version
-                if (res.isOK())
-                    return Response.status(200).encoding(MediaType.APPLICATION_JSON)
-                            .entity(res.value())
-                            .header(RepFeedsService.HEADER_VERSION, version).build();
-                else
-                    throw new WebApplicationException(statusCodeFrom(res));
+                return RepFeedsClientFactory.get(userURI).getMessages(user, time, version);
             }
         } catch (InterruptedException e) {
         }
@@ -242,11 +222,13 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
             if (uv.isOK()) {
                 String usersAndPwdEncoded = JSON.encode(user + "@" + userSub + "@" + pwd);
                 Result<Void> res = (Result<Void>) sync.waitForResult(publisher.publish(TOPIC, SUB, usersAndPwdEncoded));
-                return Response.status(statusCodeFrom(res)).header(RepFeedsService.HEADER_VERSION, version).build();
+                return Response.status(statusCodeFrom(res)).header(RepFeedsService.HEADER_VERSION, sync.getVersion())
+                        .build();
             }
-            return Response.status(statusCodeFrom(uv)).header(RepFeedsService.HEADER_VERSION, version).build(); // corrigir
+            return Response.status(statusCodeFrom(uv)).header(RepFeedsService.HEADER_VERSION, sync.getVersion())
+                    .build();
         }
-        return Response.status(statusCodeFrom(uf)).header(RepFeedsService.HEADER_VERSION, version).build(); // corrigir
+        return Response.status(statusCodeFrom(uf)).header(RepFeedsService.HEADER_VERSION, sync.getVersion()).build();
     }
 
     @Override
@@ -271,11 +253,13 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
                 String usersAndPwdEncoded = JSON.encode(user + "@" + userSub + "@" + pwd);
                 Result<Void> res = (Result<Void>) sync
                         .waitForResult(publisher.publish(TOPIC, UNSUB, usersAndPwdEncoded));
-                return Response.status(statusCodeFrom(res)).header(RepFeedsService.HEADER_VERSION, version).build();
+                return Response.status(statusCodeFrom(res)).header(RepFeedsService.HEADER_VERSION, sync.getVersion())
+                        .build();
             }
-            return Response.status(statusCodeFrom(uf)).header(RepFeedsService.HEADER_VERSION, version).build(); // corrigir
+            return Response.status(statusCodeFrom(uf)).header(RepFeedsService.HEADER_VERSION, sync.getVersion())
+                    .build();
         }
-        return Response.status(statusCodeFrom(uv)).header(RepFeedsService.HEADER_VERSION, version).build(); // corrigir
+        return Response.status(statusCodeFrom(uv)).header(RepFeedsService.HEADER_VERSION, sync.getVersion()).build();
     }
 
     @Override
@@ -291,9 +275,9 @@ public class KafkaRepFeeds extends RestResource implements RepFeedsService, Reco
             Result<List<String>> res = impl.listSubs(name);
             return Response.status(200).encoding(MediaType.APPLICATION_JSON)
                     .entity(res.value())
-                    .header(RepFeedsService.HEADER_VERSION, version).build();
+                    .header(RepFeedsService.HEADER_VERSION, sync.getVersion()).build();
         }
-        return Response.status(statusCodeFrom(u)).header(RepFeedsService.HEADER_VERSION, version).build(); // corrigir
+        return Response.status(statusCodeFrom(u)).header(RepFeedsService.HEADER_VERSION, sync.getVersion()).build();
     }
 
     @Override

@@ -33,8 +33,6 @@ public class ProxyFeedsServer {
             Domain.setSeq(seq);
             ResourceConfig config = new ResourceConfig();
             config.register(new RestFeedsResource(new Mastodon()));
-
-            // String ip = InetAddress.getLocalHost().getHostAddress();
             String ip = InetAddress.getLocalHost().getHostName();
             String serverURI = String.format(SERVER_URI_FMT, ip, PORT);
             URI uri = URI.create(serverURI);

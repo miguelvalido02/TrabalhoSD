@@ -1,13 +1,13 @@
 package sd2223.trab1.server;
 
-import java.net.InetAddress;
 import java.net.URI;
+import java.net.InetAddress;
 import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
 
-import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 
 import sd2223.trab1.server.rest.RestUsersResource;
 
@@ -31,7 +31,6 @@ public class RestUsersServer {
 			ResourceConfig config = new ResourceConfig();
 			config.register(new RestUsersResource());
 
-			// String ip = InetAddress.getLocalHost().getHostAddress();
 			String ip = InetAddress.getLocalHost().getHostName();
 			String serverURI = String.format(SERVER_URI_FMT, ip, PORT);
 			URI uri = URI.create(serverURI);
